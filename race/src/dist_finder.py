@@ -9,8 +9,9 @@ from race.msg import pid_input
 angle_range = 240	# Hokuyo 4LX has 240 degrees FoV for scan
 desired_distance = 0.9	# distance from the wall (in m). (defaults to right wall). You need to change this for the track
 vel = 15 		# this vel variable is not really used here.
-delay = 100      # delay in ms from detection to correction
-forward_projection = vel * (delay / 1000)	# distance (in m) that we project the car forward for correcting the error. You have to adjust this.
+delay = 0.1     # delay in seconds
+forward_projection = vel * delay / 30	# distance (in m) that we project the car forward for correcting the error. You have to adjust this.
+forward_projection = 0.5
 error = 0.0		# initialize the error
 car_length = 0.50 # Traxxas Rally is 20 inches or 0.5 meters. Useful variable.
 theta = math.radians(50)      # angle being swept (in degrees)
@@ -24,8 +25,9 @@ def getRange(data,angle):
     # angle: between -30 to 210 degrees, where 0 degrees is directly to the right, and 90 degrees is directly in front
     # Outputs length in meters to object with angle in lidar scan field of view
     # Make sure to take care of NaNs etc.
+        angle -= math.pi/2
 	index = (angle - data.angle_min) / data.angle_increment
-	return data.ranges[index]
+	return data.ranges[int(index)]
 
 
 def callback(data):
@@ -36,7 +38,7 @@ def callback(data):
 	# Compute Alpha, AB, and CD..and finally the error.
     	alpha = math.atan((a * math.cos(theta) - b) / (a * math.sin(theta)))
     	ab = b * math.cos(alpha)
-    	ac = foward_projection
+    	ac = forward_projection
     	cd = ab + ac * math.sin(alpha)
     	error = desired_distance - cd
 
@@ -47,10 +49,15 @@ def callback(data):
 	msg.pid_vel = vel		# velocity error can also be sent.
 	pub.publish(msg)
 
+        print("alpha: %lf, ab: %lf" % (alpha, ab))
+
 
 if __name__ == '__main__':
 	print("Hokuyo LIDAR node started")
+        theta = math.radians(input("theta: "))
+
+        desired_distance = input("desired_distance: ")
 	rospy.init_node('dist_finder',anonymous = True)
 	# TODO: Make sure you are subscribing to the correct car_x/scan topic on your racecar
-	rospy.Subscriber("/car_X/scan",LaserScan,callback)
+	rospy.Subscriber("/car_9/scan",LaserScan,callback)
 	rospy.spin()
