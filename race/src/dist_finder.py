@@ -24,8 +24,8 @@ def getRange(data,angle):
     # angle: between -30 to 210 degrees, where 0 degrees is directly to the right, and 90 degrees is directly in front
     # Outputs length in meters to object with angle in lidar scan field of view
     # Make sure to take care of NaNs etc.
-    index = (angle - data.angle_min) / data.angle_increment
-    return data.ranges[index]
+	index = (angle - data.angle_min) / data.angle_increment
+	return data.ranges[index]
 
 
 def callback(data):
@@ -34,11 +34,11 @@ def callback(data):
 
 	## Your code goes here to determine the projected error as per the alrorithm
 	# Compute Alpha, AB, and CD..and finally the error.
-    alpha = math.atan((a * math.cos(theta) - b) / (a * math.sin(theta)))
-    ab = b * math.cos(alpha)
-    ac = foward_projection
-    cd = ab + ac * math.sin(alpha)
-    error = desired_distance - cd
+    	alpha = math.atan((a * math.cos(theta) - b) / (a * math.sin(theta)))
+    	ab = b * math.cos(alpha)
+    	ac = foward_projection
+    	cd = ab + ac * math.sin(alpha)
+    	error = desired_distance - cd
 
 	msg = pid_input()	# An empty msg is created of the type pid_input
 
