@@ -70,7 +70,7 @@ def control(data):
 	vel = min(pid_vel, max(min_vel, vel))
 	command.speed = vel
 
-	print("steering_angle: %lf, speed: %lf" % (command.steering_angle, command.speed))
+print("steering_angle: %lf, speed: %lf, pid_vel: %lf, vel_correction: %lf" % (command.steering_angle, command.speed, pid_vel, vel_correction))
 
 	# Move the car autonomously
 	command_pub.publish(command)
