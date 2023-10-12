@@ -1,5 +1,5 @@
 <launch>
-    <include file="$(find "move-base")/launch/move-base.launch>
+    <include file="$(find move-base)/launch/move-base.launch>
         <arg name="listen_offboard" value="true">
     </include>
 
