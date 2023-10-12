@@ -50,7 +50,7 @@ def control(data):
 	pid_steering_correction = kp * error + kd * (prev_error - error)
 	angle = pid_steering_correction
 
-	vel_correction = kp_vel * error + kd_vel * (prev_error - error)
+	vel_correction = kp_vel * abs(error) + kd_vel * (abs(prev_error) - abs(error))
 
 	prev_error = error
 
