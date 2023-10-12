@@ -1,6 +1,6 @@
 <launch>
     <include file="$(find move-base)/launch/move-base.launch>
-        <arg name="listen_offboard" value="true">
+        <arg name="listen_offboard" value="true" />
     </include>
 
     <node pkg="race" type="control.py" launch-prefix="gnome-terminal -e"/>
