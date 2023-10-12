@@ -28,7 +28,7 @@ def getRange(data,angle):
         angle -= math.pi/2
 	index = (angle - data.angle_min) / data.angle_increment
 	return data.ranges[int(index)]
-
+funcfuncfunctionfunc
 
 def callback(data):
 	a = getRange(data,theta) # obtain the ray distance for theta
@@ -54,9 +54,9 @@ def callback(data):
 
 if __name__ == '__main__':
 	print("Hokuyo LIDAR node started")
-        theta = math.radians(input("theta: "))
+        theta = math.radians(input("theta [50]: ") or 50)
+        desired_distance = input("desired_distance [0.9]: ") or 0.9
 
-        desired_distance = input("desired_distance: ")
 	rospy.init_node('dist_finder',anonymous = True)
 	# TODO: Make sure you are subscribing to the correct car_x/scan topic on your racecar
 	rospy.Subscriber("/car_9/scan",LaserScan,callback)

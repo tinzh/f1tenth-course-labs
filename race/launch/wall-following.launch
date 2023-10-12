@@ -1,0 +1,8 @@
+<launch>
+    <include file="$(find "move-base")/launch/move-base.launch>
+        <arg name="listen_offboard" value="true">
+    </include>
+
+    <node pkg="race" type="control.py" launch-prefix="gnome-terminal -e"/>
+    <node pkg="race" type="dist_finder.py" launch-prefix="gnome-terminal -e"/>
+</launch>
