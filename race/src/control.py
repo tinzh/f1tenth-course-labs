@@ -39,23 +39,23 @@ def control(data):
 
 	# 1. Scale the error
 	# 2. Apply the PID equation on error to compute steering
-        error = data.pid_error
-        pid_steering_correction = kp * error + kd * (prev_error - error)
-        angle = pid_steering_correction
+	error = data.pid_error
+	pid_steering_correction = kp * error + kd * (prev_error - error)
+	angle = pid_steering_correction
         
 
 	# An empty AckermannDrive message is created. You will populate the steering_angle and the speed fields.
 	command = AckermannDrive()
 
 	# TODO: Make sure the steering value is within bounds [-100,100]
-        steering_angle = angle + servo_offset
-        steering_angle = min(100, max(-100, steering_angle))
+	steering_angle = angle + servo_offset
+	steering_angle = min(100, max(-100, steering_angle))
 	command.steering_angle = steering_angle
 
 	# TODO: Make sure the velocity is within bounds [0,100]
 	command.speed = vel_input
 
-        print("steering_angle: %lf, speed: %lf" % (command.steering_angle, command.speed))
+	print("steering_angle: %lf, speed: %lf" % (command.steering_angle, command.speed))
 
 	# Move the car autonomously
 	command_pub.publish(command)
