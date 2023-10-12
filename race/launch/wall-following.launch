@@ -3,6 +3,6 @@
         <arg name="listen_offboard" value="true" />
     </include>
 
-    <node pkg="race" type="control.py" launch-prefix="gnome-terminal -e"/>
-    <node pkg="race" type="dist_finder.py" launch-prefix="gnome-terminal -e"/>
+    <node pkg="race" type="control.py" name="control" launch-prefix="gnome-terminal -e"/>
+    <node pkg="race" type="dist_finder.py" name="dist_finder" launch-prefix="gnome-terminal -e"/>
 </launch>
