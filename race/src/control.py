@@ -31,6 +31,10 @@ vel_input = 15	#TODO
 # TODO: Use the coorect topic /car_x/offboard/command. The multiplexer listens to this topic
 command_pub = rospy.Publisher('/car_9/offboard/command', AckermannDrive, queue_size = 1)
 
+def bound(val, lower, upper):
+    return min(upper, max(lower, val))
+    
+
 def control(data):
 	global prev_error
 	global vel_input
@@ -61,13 +65,14 @@ def control(data):
 
 	# TODO: Make sure the steering value is within bounds [-100,100]
 	steering_angle = angle + servo_offset
-	steering_angle = min(100, max(-100, steering_angle))
+	steering_angle = bound(steering_angle, -100, 100)
 	command.steering_angle = steering_angle
 
 	# TODO: Make sure the velocity is within bounds [0,100]
-	pid_vel = min(100, max(0, data.pid_vel))
+    # max possible velocity is pid_vel, vel_correction decreases vel
+	pid_vel = bound(data.pid_vel, 0, 100)
 	vel = pid_vel - vel_correction
-	vel = min(pid_vel, max(min_vel, vel))
+	vel = bound(vel, min_vel, pid_vel)
 	command.speed = vel
 
 	print("steering_angle: %lf, speed: %lf, pid_vel: %lf, vel_correction: %lf" % (command.steering_angle, command.speed, pid_vel, vel_correction))
@@ -82,13 +87,13 @@ if __name__ == '__main__':
 	global kd
 	global ki
 	global vel_input
-	kp = float(input("Enter Kp Value [250]: ") or "250")
-	kd = float(input("Enter Kd Value [0]: ") or "0")
-	ki = float(input("Enter Ki Value [0]: ") or "0")
+	kp = float(raw_input("Enter Kp Value [250]: ") or "250")
+	kd = float(raw_input("Enter Kd Value [0]: ") or "0")
+	ki = float(raw_input("Enter Ki Value [0]: ") or "0")
 
-	kp_vel = float(input("Enter vel Kp Value [0]: ") or "0")
-	kd_vel = float(input("Enter vel Kd Value [0]: ") or "0")
-	ki_vel = float(input("Enter vel Ki Value [0]: ") or "0")
+	kp_vel = float(raw_input("Enter vel Kp Value [0]: ") or "0")
+	kd_vel = float(raw_input("Enter vel Kd Value [0]: ") or "0")
+	ki_vel = float(raw_input("Enter vel Ki Value [0]: ") or "0")
 	# vel_input = int(input("Enter desired velocity [15]: ") or "15")
 	rospy.init_node('pid_controller', anonymous=True)
     # subscribe to the error topic
