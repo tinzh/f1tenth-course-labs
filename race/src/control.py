@@ -102,7 +102,7 @@ def control(data):
 	command.speed = min(max(min_vel, vel_coefficient * data.pid_vel), data.pid_vel)
 	#vel_correction = 0
 	if(abs(command.steering_angle) < 50):
-        command.speed = data.pid_vel
+		command.speed = data.pid_vel
 	else:
 	command.speed = min_vel
 
