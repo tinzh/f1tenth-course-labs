@@ -122,13 +122,13 @@ if __name__ == '__main__':
 	global kd
 	global ki
 	global vel_input
-	# kp = float(raw_input("Enter Kp Value [250]: ") or "250")
-	# kd = float(raw_input("Enter Kd Value [0]: ") or "0")
-	# ki = float(raw_input("Enter Ki Value [0]: ") or "0")
+	kp = float(raw_input("Enter Kp Value [250]: ") or "250")
+	kd = float(raw_input("Enter Kd Value [0]: ") or "0")
+	ki = float(raw_input("Enter Ki Value [0]: ") or "0")
 
-	# kp_vel = float(raw_input("Enter vel Kp Value [0]: ") or "0")
-	# kd_vel = float(raw_input("Enter vel Kd Value [0]: ") or "0")
-	# ki_vel = float(raw_input("Enter vel Ki Value [0]: ") or "0")
+	kp_vel = float(raw_input("Enter vel Kp Value [0]: ") or "0")
+	kd_vel = float(raw_input("Enter vel Kd Value [0]: ") or "0")
+	ki_vel = float(raw_input("Enter vel Ki Value [0]: ") or "0")
 	# vel_input = int(input("Enter desired velocity [15]: ") or "15")
 	rospy.init_node('pid_controller', anonymous=True)
 	# subscribe to the error topic
