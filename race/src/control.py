@@ -104,7 +104,7 @@ def control(data):
 	if(abs(command.steering_angle) < 50):
 		command.speed = data.pid_vel
 	else:
-	command.speed = min_vel
+		command.speed = min_vel
 
 	print("angle: %lf", angle)
 
