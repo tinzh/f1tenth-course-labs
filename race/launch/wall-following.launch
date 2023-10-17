@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="race" type="control.py" name="control" launch-prefix="xterm -e"/>
+    <node pkg="race" type="dist_finder.py" name="dist_finder" launch-prefix="xterm -e"/>
+
+</launch>
