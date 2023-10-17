@@ -27,7 +27,7 @@ def getRange(data,angle):
 	angle -= math.pi/2
 	index = (angle - data.angle_min) / data.angle_increment
 	if math.isnan(data.ranges[int(index)]):
-	return 5
+		return 5
 	return data.ranges[int(index)]
 
 def callback(data):
@@ -53,9 +53,9 @@ def callback(data):
 
 if __name__ == '__main__':
 	print("Hokuyo LIDAR node started")
-	# theta = math.radians(float(raw_input("theta [50]: ") or "50"))
-	# desired_distance = float(raw_input("desired_distance [0.9]: ") or "0.9")
-	#vel = float(raw_input("velocity [15]: ") or "15")
+	theta = math.radians(float(raw_input("theta [70]: ") or "70"))
+	desired_distance = float(raw_input("desired_distance [0.9]: ") or "0.9")
+	vel = float(raw_input("velocity [35]: ") or "35")
 
 	rospy.init_node('dist_finder',anonymous = True)
 	# TODO: Make sure you are subscribing to the correct car_x/scan topic on your racecar
