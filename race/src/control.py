@@ -9,9 +9,9 @@ from ackermann_msgs.msg import AckermannDrive
 servo_offset = 18 # zero correction offset in case servo is misaligned and has a bias in turning.
 prev_error = 0.0
 
-kp = 120 #TODO
-kd = 0#1.5 #TODO
-ki = 0#12 #TODO
+kp = 100 #TODO
+kd = 0.05#1.5 #TODO
+ki = 0.4#12 #TODO
 
 kp_vel = 0.0
 kd_vel = 0.0
@@ -19,7 +19,7 @@ ki_vel = 0.0
 
 min_vel = 15
 
-num_seconds_to_look_at = 1
+num_seconds_to_look_at = 0.5
 hz = 10
 error_array_length = num_seconds_to_look_at * hz
 
@@ -102,11 +102,17 @@ def control(data):
 	vel_coefficient = 25/(abs(steering_angle)+1)
 
 	command.speed = min(max(min_vel, vel_coefficient * data.pid_vel), data.pid_vel)
-	#vel_correction = 0
-	if(abs(command.steering_angle) < 50):
+	#vel_correction = 
+	threshold1 = 55
+	threshold2 = 80
+	if(abs(command.steering_angle) < threshold1):
 		command.speed = data.pid_vel
 	else:
-		command.speed = data.pid_vel/2
+		if (abs(command.steering_angle) > threshold2):
+			command.speed = data.pid_vel/3
+		else:
+			command.speed = data.pid_vel*(0.75)
+	# command.speed = data.pid_vel
 
 	print("angle: %lf", angle)
 
@@ -124,9 +130,9 @@ if __name__ == '__main__':
 	global kd
 	global ki
 	global vel_input
-	kp = float(raw_input("Enter Kp Value [120]: ") or "120")
-	kd = float(raw_input("Enter Kd Value [0]: ") or "0")
-	ki = float(raw_input("Enter Ki Value [0]: ") or "0")
+	kp = float(raw_input("Enter Kp Value [100]: ") or "100")
+	kd = float(raw_input("Enter Kd Value [0.05]: ") or "0.05")
+	ki = float(raw_input("Enter Ki Value [0.4]: ") or "0.4")
 
 	# kp_vel = float(raw_input("Enter vel Kp Value [0]: ") or "0")
 	# kd_vel = float(raw_input("Enter vel Kd Value [0]: ") or "0")
