@@ -9,6 +9,10 @@ from ackermann_msgs.msg import AckermannDrive
 servo_offset = 18 # zero correction offset in case servo is misaligned and has a bias in turning.
 prev_error = 0.0
 
+kp = 120 #TODO
+kd = 0#1.5 #TODO
+ki = 0#12 #TODO
+
 kp_vel = 0.0
 kd_vel = 0.0
 ki_vel = 0.0
@@ -35,7 +39,7 @@ last_steering = 0
 vel_input = 15 #TODO
 
 # Publisher for moving the car.
-# TODO: Use the coorect topic /car_x/offboard/command. The multiplexer listens to this topic
+# TODO: Use the nvicoorect topic /car_x/offboard/command. The multiplexer listens to this topic
 command_pub = rospy.Publisher('/car_9/offboard/command', AckermannDrive, queue_size = 1)
 
 def bound(val, lower, upper):
@@ -44,9 +48,7 @@ def bound(val, lower, upper):
 def control(data):
 	global prev_error
 	global vel_input
-	kp = 120 #TODO
-	kd = 0#1.5 #TODO
-	ki = 0#12 #TODO
+	global kp, kd, ki
 	global angle
 	global error_sum
 	global error_array
@@ -104,7 +106,7 @@ def control(data):
 	if(abs(command.steering_angle) < 50):
 		command.speed = data.pid_vel
 	else:
-		command.speed = min_vel
+		command.speed = data.pid_vel/2
 
 	print("angle: %lf", angle)
 
@@ -122,13 +124,13 @@ if __name__ == '__main__':
 	global kd
 	global ki
 	global vel_input
-	kp = float(raw_input("Enter Kp Value [250]: ") or "250")
+	kp = float(raw_input("Enter Kp Value [120]: ") or "120")
 	kd = float(raw_input("Enter Kd Value [0]: ") or "0")
 	ki = float(raw_input("Enter Ki Value [0]: ") or "0")
 
-	kp_vel = float(raw_input("Enter vel Kp Value [0]: ") or "0")
-	kd_vel = float(raw_input("Enter vel Kd Value [0]: ") or "0")
-	ki_vel = float(raw_input("Enter vel Ki Value [0]: ") or "0")
+	# kp_vel = float(raw_input("Enter vel Kp Value [0]: ") or "0")
+	# kd_vel = float(raw_input("Enter vel Kd Value [0]: ") or "0")
+	# ki_vel = float(raw_input("Enter vel Ki Value [0]: ") or "0")
 	# vel_input = int(input("Enter desired velocity [15]: ") or "15")
 	rospy.init_node('pid_controller', anonymous=True)
 	# subscribe to the error topic

@@ -53,9 +53,10 @@ def callback(data):
 
 if __name__ == '__main__':
 	print("Hokuyo LIDAR node started")
+	
 	theta = math.radians(float(raw_input("theta [70]: ") or "70"))
-	desired_distance = float(raw_input("desired_distance [0.9]: ") or "0.9")
-	vel = float(raw_input("velocity [35]: ") or "35")
+	desired_distance = float(raw_input("desired_distance [0.8]: ") or "0.8")
+	vel = float(raw_input("velocity [30]: ") or "30")
 
 	rospy.init_node('dist_finder',anonymous = True)
 	# TODO: Make sure you are subscribing to the correct car_x/scan topic on your racecar
