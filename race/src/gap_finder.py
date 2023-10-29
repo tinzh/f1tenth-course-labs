@@ -65,7 +65,7 @@ def callback(data):
 		print(closest_distance)
 		print(params["car_width"] / 4 / closest_distance)
 		index_width = 2 * math.asin(params["car_width"] / (4.0 * closest_distance))
-		index_width = math.ceil(index_width)
+		index_width = int(math.ceil(index_width))
 
 		for i in range(disparity[0], 
 				       disparity[0] + direction_sign * index_width, 
