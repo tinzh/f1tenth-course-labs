@@ -56,6 +56,7 @@ def control(data):
 	command.steering_angle = angle
 	command.speed = speed
 
+	print("steering_angle: ", angle)
 	command_pub.publish(command)
 
 
