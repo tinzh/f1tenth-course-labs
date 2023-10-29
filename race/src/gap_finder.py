@@ -61,9 +61,9 @@ def callback(data):
 		closest_distance = distances[disparity[0]]
 		direction_sign = disparity[1] - disparity[0]
         
-		print(index_to_angle(disparity[0]), index_to_angle(disparity[1]))
-		print(closest_distance)
-		print(params["car_width"] / 4 / closest_distance)
+		# print(index_to_angle(disparity[0]), index_to_angle(disparity[1]))
+		# print(closest_distance)
+		# print(params["car_width"] / 4 / closest_distance)
 		index_width = 2 * math.asin(params["car_width"] / (4.0 * closest_distance))
 		index_width = int(math.ceil(index_width))
 
@@ -87,7 +87,7 @@ def callback(data):
 		
 
 	desired_angle = index_to_angle(deepest_gap)
-
+	print(desired_angle)
 
 	msg = pid_input()
 	msg.pid_error = desired_angle
