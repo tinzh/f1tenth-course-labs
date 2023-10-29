@@ -59,7 +59,7 @@ def callback(data):
 		closest_distance = distances[disparity[0]]
 		direction_sign = disparity[1] - disparity[0]
         
-		print(disparity[0], disparity[1])
+		print(index_to_angle(disparity[0]), index_to_angle(disparity[1]))
 		print(closest_distance)
 		print(params["car_width"] / 4 / closest_distance)
 		index_width = 2 * math.asin(params["car_width"] / (4.0 * closest_distance))
