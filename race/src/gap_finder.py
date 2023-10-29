@@ -14,7 +14,7 @@ def callback(data):
 		return data.angle_min + data.angle_increment * index
 		
 
-	distances = data.ranges
+	distances = list(data.ranges)
 
 	# interpolate distances, NaNs get interpolated to closest adjacent distance
 	first_nan_index = 0
@@ -59,7 +59,7 @@ def callback(data):
 		closest_distance = distances[disparity[0]]
 		direction_sign = disparity[1] - disparity[0]
 
-		index_width = 2 * math.arcsin(params["car_width"] / (4 * closest_distance)
+		index_width = 2 * math.arcsin(params["car_width"] / (4 * closest_distance))
 		index_width = math.ceil(index_width)
 
 		for i in range(disparity[0], 
