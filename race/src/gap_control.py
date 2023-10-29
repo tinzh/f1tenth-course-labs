@@ -39,7 +39,7 @@ def control(data):
 		error_array.append(error)
 		if len(error_array) > params["error_array_length"]:
 			error_array = error_array[1:]
-		error_sum = sum(error_array) / hz
+		error_sum = sum(error_array) / params["hz"]
 
 
 	angle = bound(pid_steering_correction + params["servo_offset"], -100, 100)
