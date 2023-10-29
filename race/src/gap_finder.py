@@ -43,6 +43,8 @@ def callback(data):
 	disparities = []
 
 	for i in range(len(distances)-1):
+		if abs(index_to_angle(i)) > math.pi/2:
+			continue
 		if abs(distances[i+1] - distances[i]) > params["disparity_threshold"]:
 			if (distances[i] < distances[i+1]):
 				disparities.append((i, i+1))
