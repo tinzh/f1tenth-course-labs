@@ -46,7 +46,7 @@ def control(data):
 
 	# tuples of (threshold, proportion of max_vel)
 	speed = data.pid_vel
-	thresholds = [(55, 1/3), (80, 3/4)]
+	thresholds = [(55, 1.0/3), (80, 3.0/4)]
 	for threshold, proportion in thresholds:
 		if abs(angle) < threshold:
 			speed *= proportion
