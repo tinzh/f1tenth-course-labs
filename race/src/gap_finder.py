@@ -54,31 +54,14 @@ def callback(data):
 	disparities.sort(key=lambda disparity: distances[disparity[0]])
 
 	for disparity in disparities:
-		# if disparity was overwritten by other disparity
-		if distances[disparity[1]] == distances[disparity[0]]:
-			continue
-
-		closest_distance = distances[disparity[0]]
-		direction_sign = disparity[1] - disparity[0]
-        
-		# print(index_to_angle(disparity[0]), index_to_angle(disparity[1]))
-		# print(closest_distance)
-		# print(params["car_width"] / 4 / closest_distance)
-		index_width = 2 * math.asin(params["car_width"] / (4.0 * closest_distance))
-		index_width = int(math.ceil(index_width))
-
-		for i in range(disparity[0], 
-				       disparity[0] + direction_sign * index_width, 
-					   direction_sign):
-			distances[i] = min(distances[i], closest_distance)
-			
-
-	# at this point, disparities have been extended in distances
+		n = math.ceil(params["car width"]/(2*distance[disparity[0]]*math.cos(math.radians(index_to_angle))))
+		for i in range(disparity[0], disparity[0]+(n*(disparity[1]-disparity[0])), disparity[1]-disparity[0]):
+			distances[i] = min(distances[disparity[0]], distance[i])
 
 	# directly find index with deepest gap
 	deepest_gap = 0
 	for i, distance in enumerate(distances):
-		if not math.isnan(distance) and distance > distances[deepest_gap]:
+		if distance > distances[deepest_gap]:
 			deepest_gap = i
 
 			
