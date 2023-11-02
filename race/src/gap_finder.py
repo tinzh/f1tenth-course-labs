@@ -75,6 +75,7 @@ def callback(data):
 
 	for disparity in disparities:
 		n = math.ceil(params["car_width"]/(2*distances[disparity[0]]*math.tan(data.angle_increment)))
+		print(n)
 		for i in range(disparity[0], disparity[0]+(int(n-1)*(disparity[1]-disparity[0])), disparity[1]-disparity[0]):
 			distances[i] = min(distances[disparity[0]], distances[i])
 
