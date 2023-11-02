@@ -112,22 +112,22 @@ if __name__ == "__main__":
 
 	#Not sure about these definitions
 	gap_start_index = deepest_gap - index_width
-    	gap_end_index = deepest_gap + index_width
+	gap_end_index = deepest_gap + index_width
 	
 	#gap_start_index = max(0, gap_start_index)
 	#gap_end_index = min(len(data.ranges) - 1, gap_end_index)
 	
 	#Satisfy laserscan
 	coles_gap = LaserScan()
-    	coles_gap.header = data.header
-    	coles_gap.angle_min = index_to_angle(gap_start_index)
-    	coles_gap.angle_max = index_to_angle(gap_end_index)
-    	coles_gap.ranges = [data.ranges[i] for i in range(gap_start_index, gap_end_index)] #+ 1)]
-    	coles_gap.angle_increment = data.angle_increment
-    	coles_gap.time_increment = data.time_increment
-    	coles_gap.scan_time = data.scan_time
-    	coles_gap.range_min = data.range_min
-    	coles_gap.range_max = data.range_max
+	coles_gap.header = data.header
+	coles_gap.angle_min = index_to_angle(gap_start_index)
+	coles_gap.angle_max = index_to_angle(gap_end_index)
+	coles_gap.ranges = [data.ranges[i] for i in range(gap_start_index, gap_end_index)] #+ 1)]
+	coles_gap.angle_increment = data.angle_increment
+	coles_gap.time_increment = data.time_increment
+	coles_gap.scan_time = data.scan_time
+	coles_gap.range_min = data.range_min
+	coles_gap.range_max = data.range_max
 
 	pub.publish(coles_gap)
 
