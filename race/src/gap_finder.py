@@ -35,6 +35,8 @@ def callback(data):
 			else:
 				min_distance = min(distances[first_nan_index-1], distances[i])
 
+			if min_distance > 0.3:
+				continue
 			for j in range(first_nan_index, i):
 				distances[j] = min_distance
 		i += 1
