@@ -26,6 +26,8 @@ def callback(data):
 	i = 0
 	while i < len(distances):
 		if math.isnan(distances[i]) or distances[i] < 0.1:
+			print(distances[i])
+
 			first_nan_index = i
 			while i < len(distances) and (math.isnan(distances[i]) or distances[i] < 0.1):
 				i += 1
