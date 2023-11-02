@@ -57,15 +57,21 @@ def callback(data):
 	# extend disparities
 	for disparity in disparities:
 		closest_distance = distances[disparity[0]]
+
 		print(closest_distance)
 		print(params["car_width"] / (2 * closest_distance))
+
 		# if domain error, don't extend disparities
 		if params["car_width"] / 2 >= closest_distance:
 			continue
+
 		n = 2 * math.asin(params["car_width"] / (2 * closest_distance)) / data.angle_increment
 		n = int(n)
+
 		print(n)
-		for i in range(disparity[0], disparity[0]+(n*(disparity[1]-disparity[0])), disparity[1]-disparity[0]):
+
+		disparity_sign = disparity[1] - disparity[0]
+		for i in range(disparity[0], bound(disparity[0]+(n*disparity_sign), 0, len(distances)-1), disparity_sign):
 			distances[i] = min(distances[disparity[0]], distances[i])
 
 	# directly find index with deepest gap
