@@ -90,7 +90,7 @@ def callback(data):
 		
 
 	desired_angle = index_to_angle(deepest_gap)
-	print(desired_angle)
+	print("desired_angle: ", math.degrees(desired_angle))
 
 	msg = pid_input()
 	msg.pid_error = desired_angle
