@@ -53,25 +53,29 @@ def callback(data):
 
 	disparities.sort(key=lambda disparity: distances[disparity[0]])
 
-	for disparity in disparities:
-		# if disparity was overwritten by other disparity
-		if distances[disparity[1]] == distances[disparity[0]]:
-			continue
+	# for disparity in disparities:
+	# 	# if disparity was overwritten by other disparity
+	# 	if distances[disparity[1]] == distances[disparity[0]]:
+	# 		continue
 
-		closest_distance = distances[disparity[0]]
-		direction_sign = disparity[1] - disparity[0]
+	# 	closest_distance = distances[disparity[0]]
+	# 	direction_sign = disparity[1] - disparity[0]
         
-		# print(index_to_angle(disparity[0]), index_to_angle(disparity[1]))
-		# print(closest_distance)
-		# print(params["car_width"] / 4 / closest_distance)
-		index_width = 2 * math.asin(params["car_width"] / (4.0 * closest_distance))
-		index_width = int(math.ceil(index_width))
+	# 	# print(index_to_angle(disparity[0]), index_to_angle(disparity[1]))
+	# 	# print(closest_distance)
+	# 	# print(params["car_width"] / 4 / closest_distance)
+	# 	index_width = 2 * math.asin(params["car_width"] / (4.0 * closest_distance))
+	# 	index_width = int(math.ceil(index_width))
 
-		for i in range(disparity[0], 
-				       disparity[0] + direction_sign * index_width, 
-					   direction_sign):
-			distances[i] = min(distances[i], closest_distance)
-			
+	# 	for i in range(disparity[0], 
+	# 			       disparity[0] + direction_sign * index_width, 
+	# 				   direction_sign):
+	# 		distances[i] = min(distances[i], closest_distance)
+
+	for disparity in disparities:
+		n = math.ceil(params["car width"]/(2*distance[disparity[0]]*math.tan(data.angle_increment)))
+		for i in range(disparity[0], disparity[0]+(n*(disparity[1]-disparity[0])), disparity[1]-disparity[0]):
+			distances[i] = min(distances[disparity[0]], distance[i])
 
 	# at this point, disparities have been extended in distances
 
