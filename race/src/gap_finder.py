@@ -76,6 +76,7 @@ def callback(data):
 	for disparity in disparities:
 		# n = math.ceil(params["car_width"]/(2*distances[disparity[0]]*math.atan(data.angle_increment)))
 		closest_distance = distances[disparity[0]]
+		print(params["car_width"] / (2 * closest_distance))
 		n = 2 * math.asin(params["car_width"] / (2 * closest_distance)) / data.angle_increment
 		n = int(n)
 		print(n)
