@@ -7,6 +7,7 @@ from race.msg import pid_input
 
 params = {}
 pub = rospy.Publisher('error', pid_input, queue_size=10)
+debug_pub = rospy.Publisher('debug_scan', LaserScan, queue_size=10)
 
 def callback(data):
 	# angle of 0 is straight ahead, negative is right, positive is left
@@ -100,6 +101,33 @@ def callback(data):
 	pub.publish(msg)
 
 
+    # public to debug topic for rviz
+	# RVIZ, red dots representing the gap detection, uses laserscan message type but isn't actually a laserscan.
+
+	#Not sure about these definitions
+	index_width = 10
+	gap_start_index = deepest_gap - index_width
+	gap_end_index = deepest_gap + index_width
+	
+	#gap_start_index = max(0, gap_start_index)
+	#gap_end_index = min(len(data.ranges) - 1, gap_end_index)
+	
+	#Satisfy laserscan
+	coles_gap = LaserScan()
+	coles_gap.header = data.header
+	coles_gap.angle_min = index_to_angle(gap_start_index)
+	coles_gap.angle_max = index_to_angle(gap_end_index)
+	coles_gap.ranges = [data.ranges[i] for i in range(gap_start_index, gap_end_index)] #+ 1)]
+	coles_gap.angle_increment = data.angle_increment
+	coles_gap.time_increment = data.time_increment
+	coles_gap.scan_time = data.scan_time
+	coles_gap.range_min = data.range_min
+	coles_gap.range_max = data.range_max
+
+	debug_pub.publish(coles_gap)
+
+
+
 if __name__ == "__main__":
 	def get_input(name, default_value):
 		params[name] = float(raw_input("%s [%f]" % (name, default_value)) or str(default_value))
@@ -111,3 +139,4 @@ if __name__ == "__main__":
 	rospy.init_node('gap_finder',anonymous = True)
 	rospy.Subscriber("/car_9/scan",LaserScan,callback)
 	rospy.spin()
+
