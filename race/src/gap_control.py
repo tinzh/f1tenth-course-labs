@@ -48,7 +48,7 @@ def control(data):
 	speed = data.pid_vel
 	thresholds = [(55, 1.0/3), (80, 3.0/4)]
 	for threshold, proportion in thresholds:
-		if abs(angle) < threshold:
+		if abs(pid_steering_correction) < threshold:
 			speed *= proportion
 			break
 
