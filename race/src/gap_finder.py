@@ -120,7 +120,7 @@ if __name__ == "__main__":
     	coles_gap.header = data.header
     	coles_gap.angle_min = index_to_angle(gap_start_index)
     	coles_gap.angle_max = index_to_angle(gap_end_index)
-    	coles_gap.ranges = [data.ranges[i] for i in range(gap_start_index, gap_end_index + 1)]
+    	coles_gap.ranges = [data.ranges[i] for i in range(gap_start_index, gap_end_index)] #+ 1)]
     	coles_gap.angle_increment = data.angle_increment
     	coles_gap.time_increment = data.time_increment
     	coles_gap.scan_time = data.scan_time
