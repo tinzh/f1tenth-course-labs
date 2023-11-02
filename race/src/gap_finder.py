@@ -61,8 +61,8 @@ def callback(data):
 	for disparity in disparities:
 		closest_distance = distances[disparity[0]]
 
-		print(closest_distance)
-		print(params["car_width"] / (2 * closest_distance))
+		# print(closest_distance)
+		# print(params["car_width"] / (2 * closest_distance))
 
 		# if domain error, don't extend disparities
 		if params["car_width"] / 2 >= closest_distance:
@@ -71,7 +71,7 @@ def callback(data):
 		n = 2 * math.asin(params["car_width"] / (2 * closest_distance)) / data.angle_increment
 		n = int(n)
 
-		print(n)
+		# print(n)
 
 		disparity_sign = disparity[1] - disparity[0]
 		for i in range(disparity[0], bound(disparity[0]+(n*disparity_sign), 0, len(distances)-1), disparity_sign):
@@ -121,8 +121,11 @@ def callback(data):
 	coles_gap.range_min = data.range_min
 	coles_gap.range_max = data.range_max
 
-	debug_pub.publish(coles_gap)
+	# debug_pub.publish(coles_gap)
 
+	justins_gap = data
+	data.ranges = distances
+	debug_pub.publish(justins_gap)
 
 
 if __name__ == "__main__":
