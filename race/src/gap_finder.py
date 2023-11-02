@@ -8,6 +8,7 @@ from race.msg import pid_input
 params = {}
 pub = rospy.Publisher('error', pid_input, queue_size=10)
 debug_pub = rospy.Publisher('debug_scan', LaserScan, queue_size=10)
+heading_pub = rospy.Publisher('heading', LaserScan, queue_size=10)
 
 def bound(val, lower, upper):
 	return min(upper, max(lower, val))
@@ -121,7 +122,7 @@ def callback(data):
 	coles_gap.range_min = data.range_min
 	coles_gap.range_max = data.range_max
 
-	# debug_pub.publish(coles_gap)
+	heading_pub.publish(coles_gap)
 
 	justins_gap = data
 	data.ranges = distances
