@@ -113,8 +113,10 @@ if __name__ == "__main__":
 	#Not sure about these definitions
 	gap_start_index = deepest_gap - index_width
     	gap_end_index = deepest_gap + index_width
-	gap_start_index = max(0, gap_start_index)
-	gap_end_index = min(len(data.ranges) - 1, gap_end_index)
+	
+	#gap_start_index = max(0, gap_start_index)
+	#gap_end_index = min(len(data.ranges) - 1, gap_end_index)
+	
 	#Satisfy laserscan
 	coles_gap = LaserScan()
     	coles_gap.header = data.header
