@@ -80,7 +80,7 @@ def callback(data):
 	# directly find index with deepest gap
 	deepest_gap = 0
 	for i, distance in enumerate(distances):
-		if not math.isnan(distance) and distance > distances[deepest_gap]:
+		if not math.isnan(distance) and distance > distances[deepest_gap] and -math.pi/2 < index_to_angle(i) < math.pi/2:
 			deepest_gap = i
 
 			
