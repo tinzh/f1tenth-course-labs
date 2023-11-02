@@ -9,6 +9,9 @@ params = {}
 pub = rospy.Publisher('error', pid_input, queue_size=10)
 debug_pub = rospy.Publisher('debug_scan', LaserScan, queue_size=10)
 
+def bound(val, lower, upper):
+	return min(upper, max(lower, val))
+
 def callback(data):
 	# angle of 0 is straight ahead, negative is right, positive is left
 	def index_to_angle(index):
