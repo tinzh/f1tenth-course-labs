@@ -75,8 +75,7 @@ def callback(data):
 		if params["car_width"] / 2 >= closest_distance:
 			continue
 
-		n = 2 * math.asin(params["car_width"] / (4 * closest_distance)) / data.angle_increment
-		n = int(n)
+		n = math.ceil(2 * math.asin(params["car_width"] / (4 * closest_distance)) / data.angle_increment)
 
 		# print(n)
 
