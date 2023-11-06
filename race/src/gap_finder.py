@@ -43,11 +43,7 @@ def callback(data):
 
 			for j in range(first_nan_index, i):
 				distances[j] = min_distance
-		i += 1
-
-
-			
-			
+		i += 1	
 
 	# list of tuples (i, j) where there is a disparity between 
 	# distances[i] and distances[j], with distances[i] < distances[j]
@@ -89,12 +85,19 @@ def callback(data):
 		if not math.isnan(distance) and distance > distances[deepest_gap] and -math.pi/2 < index_to_angle(i) < math.pi/2:
 			deepest_gap = i
 
+	i = deepest_gap-1
+	j = deepest_gap+1
+
+	while i-1 > 0 and abs(distances[i-1] - distances[i]) < params["disparity_threshold"]: i -= 1
+	while j+1 < len(distances) and abs(distances[j+1] - distances[j]) < params["disparity_threshold"]: j += 1
+
+	avg_deepest_gap = (i+j)/2
 			
 	# TODO: maybe put upper bound on distance?
 	# TODO: convert error to AckermannDrive
 		
 
-	desired_angle = index_to_angle(deepest_gap)
+	desired_angle = index_to_angle(avg_deepest_gap)
 	print("desired_angle: ", math.degrees(desired_angle))
 
 	msg = pid_input()
