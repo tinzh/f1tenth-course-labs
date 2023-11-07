@@ -17,7 +17,10 @@ def callback(data):
 	# angle of 0 is straight ahead, negative is right, positive is left
 	def index_to_angle(index):
 		return data.angle_min + data.angle_increment * index
-		
+	
+	def angle_to_index(angle):
+		return int((angle - data.angle_min)/data.angle_increment)
+
 
 	distances = list(data.ranges)
 
@@ -80,7 +83,7 @@ def callback(data):
 			distances[i] = min(distances[disparity[0]], distances[i])
 
 	# directly find index with deepest gap
-	deepest_gap = 0
+	deepest_gap = angle_to_index(-math.pi/2)
 	for i, distance in enumerate(distances):
 		if not math.isnan(distance) and distance > distances[deepest_gap] and -math.pi/2 < index_to_angle(i) < math.pi/2:
 			deepest_gap = i
@@ -96,7 +99,7 @@ def callback(data):
 	# TODO: maybe put upper bound on distance?
 	# TODO: convert error to AckermannDrive
 		
-
+	print("DEEPEST GAP: ", deepest_gap)
 	desired_angle = index_to_angle(avg_deepest_gap)
 	print("desired_angle: ", math.degrees(desired_angle))
 
@@ -111,9 +114,9 @@ def callback(data):
 	# RVIZ, red dots representing the gap detection, uses laserscan message type but isn't actually a laserscan.
 
 	#Not sure about these definitions
-	index_width = 10
-	gap_start_index = deepest_gap - index_width
-	gap_end_index = deepest_gap + index_width
+	index_width = 1
+	gap_start_index = avg_deepest_gap - index_width
+	gap_end_index = avg_deepest_gap + index_width
 	
 	#gap_start_index = max(0, gap_start_index)
 	#gap_end_index = min(len(data.ranges) - 1, gap_end_index)
