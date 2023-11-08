@@ -21,7 +21,6 @@ def callback(data):
 	def angle_to_index(angle):
 		return int((angle - data.angle_min)/data.angle_increment)
 
-
 	distances = list(data.ranges)
 
 	# interpolate distances, NaNs get interpolated to closest adjacent distance
@@ -86,6 +85,7 @@ def callback(data):
 		i = 0
 		while i < len(distances):
 			if -math.pi/2 < index_to_angle(i) < math.pi/2:
+				i+=1
 				continue
 			if distances[i] == params["max_distance"]:
 				gap_start = i
@@ -103,9 +103,9 @@ def callback(data):
 			if distance > distances[deepest_gap] and -math.pi/2 < index_to_angle(i) < math.pi/2:
 				deepest_gap = i
 			
-	print("DEEPEST GAP: %d" % deepest_gap)
+	print("DEEPEST GAP: %d" % (deepest_gap))
 	desired_angle = index_to_angle(deepest_gap)
-	print("desired_angle: %f" % math.degrees(desired_angle))
+	print("desired_angle: %f" % (math.degrees(desired_angle)))
 
 	msg = pid_input()
 	msg.pid_error = desired_angle
@@ -117,7 +117,6 @@ def callback(data):
 	msg.pid_vel = params["velocity"]
 
 	pub.publish(msg)
-
 
     # publish to debug topic for rviz
 	# RVIZ, red dots representing the gap detection, uses laserscan message type but isn't actually a laserscan.
@@ -151,7 +150,7 @@ if __name__ == "__main__":
 
 	get_input("disparity_threshold", 0.1)
 	get_input("car_width", 0.5)
-	get_input("velocity", 30)
+	get_input("velocity", 40)
 	get_input("max_distance", 2.5)
 
 	rospy.init_node('gap_finder',anonymous = True)
