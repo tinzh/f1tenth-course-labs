@@ -1,0 +1,7 @@
+<launch>
+    <include file="$(find move_base)/launch/move_base.launch">
+        <arg name="listen_offboard" value="true" />
+    </include>
+    <node pkg="race" type="gap_control.py" name="gap_control" launch-prefix="xterm -e"/>
+    <node pkg="race" type="gap_finder.py" name="gap_finder" launch-prefix="xterm -e"/>
+</launch>

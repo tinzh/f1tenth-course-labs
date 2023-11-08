@@ -46,11 +46,13 @@ def control(data):
 
 	# tuples of (threshold, proportion of max_vel)
 	speed = data.pid_vel
-	thresholds = [(80, 1.0/3), (55, 3.0/4)]
+	thresholds = [(80, 1.0/2), (30, 3.0/4)]
 	for threshold, proportion in thresholds:
 		if abs(pid_steering_correction) > threshold:
 			speed *= proportion
 			break
+
+	speed = bound(speed, 10, 100)
 
 	command = AckermannDrive()
 	command.steering_angle = angle

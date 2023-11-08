@@ -28,9 +28,8 @@ def callback(data):
 	first_nan_index = 0
 	i = 0
 	while i < len(distances):
+		distances[i] = min(distances[i], params["max_distance"])
 		if math.isnan(distances[i]) or distances[i] < 0.1:
-			print(distances[i])
-
 			first_nan_index = i
 			while i < len(distances) and (math.isnan(distances[i]) or distances[i] < 0.1):
 				i += 1
@@ -42,7 +41,7 @@ def callback(data):
 
 			# if NaN gap width is big enough
 			if i - first_nan_index > 5:
-				min_distance = 5
+				min_distance = params["max_distance"]
 
 			for j in range(first_nan_index, i):
 				distances[j] = min_distance
@@ -83,28 +82,57 @@ def callback(data):
 			distances[i] = min(distances[disparity[0]], distances[i])
 
 	# directly find index with deepest gap
-	deepest_gap = angle_to_index(-math.pi/2)
+	deepest_gap = angle_to_index(0)
+
+	# num_indices_from_zero_to_ninety = angle_to_index(0)-angle_to_index(-math.pi/2)
+
+	# print("dist straight ahead: ", distances[angle_to_index(0)])
+	# print(len(distances))
+
+	# window_left = angle_to_index(math.radians(-70))
+	# window_right = angle_to_index(math.radians(30))
+
+	# window_start = angle_to_index(math.radians(-60))
+
+	# for i in range(window_start, window_left, -1):
+	# 	if distances[i] > distances[deepest_gap]:
+	# 		deepest_gap = i
+	# for i in range(window_start, window_right):
+	# 	if distances[i] > distances[deepest_gap]:
+	# 		deepest_gap = i
+
+	# if distances[deepest_gap] < params["max_distance"]:
 	for i, distance in enumerate(distances):
-		if not math.isnan(distance) and distance > distances[deepest_gap] and -math.pi/2 < index_to_angle(i) < math.pi/2:
+		if distance > distances[deepest_gap] and -math.pi/2 < index_to_angle(i) < math.pi/2:
 			deepest_gap = i
 
-	i = deepest_gap-1
-	j = deepest_gap+1
+	i = deepest_gap
+	j = deepest_gap
 
-	while i-1 > 0 and abs(distances[i-1] - distances[i]) < params["disparity_threshold"]: i -= 1
-	while j+1 < len(distances) and abs(distances[j+1] - distances[j]) < params["disparity_threshold"]: j += 1
+	# while i-1 > 0 and abs(distances[i-1] - distances[i]) < params["disparity_threshold"]: i -= 1
+	# while j+1 < len(distances) and abs(distances[j+1] - distances[j]) < params["disparity_threshold"]: j += 1
+	while i > 0 and distances[i] == params["max_distance"]:
+		i -= 1
+	while j+1 < len(distances) and distances[j] == params["max_distance"]:
+		j += 1
 
 	avg_deepest_gap = (i+j)/2
+	deepest_gap = avg_deepest_gap
 			
-	# TODO: maybe put upper bound on distance?
-	# TODO: convert error to AckermannDrive
+	# TODO: find widest max distance gap
+	# TODO: interpolate nans better if their close
 		
 	print("DEEPEST GAP: ", deepest_gap)
-	desired_angle = index_to_angle(avg_deepest_gap)
+	desired_angle = index_to_angle(deepest_gap)
 	print("desired_angle: ", math.degrees(desired_angle))
 
 	msg = pid_input()
 	msg.pid_error = desired_angle
+
+	if distances[deepest_gap] < params["max_distance"] or distances[angle_to_index(0)] < 0.75 :
+		msg.pid_vel = params["velocity"] * 0.5
+	else:
+		msg.pid_vel = params["velocity"]
 	msg.pid_vel = params["velocity"]
 
 	pub.publish(msg)
@@ -142,11 +170,12 @@ def callback(data):
 
 if __name__ == "__main__":
 	def get_input(name, default_value):
-		params[name] = float(raw_input("%s [%f]" % (name, default_value)) or str(default_value))
+		params[name] = float(raw_input("%s [%f]: " % (name, default_value)) or str(default_value))
 
 	get_input("disparity_threshold", 0.1)
 	get_input("car_width", 0.5)
-	get_input("velocity", 20)
+	get_input("velocity", 30)
+	get_input("max_distance", 2.5)
 
 	rospy.init_node('gap_finder',anonymous = True)
 	rospy.Subscriber("/car_9/scan",LaserScan,callback)
