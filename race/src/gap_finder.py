@@ -27,7 +27,11 @@ def callback(data):
 	# interpolate distances, NaNs get interpolated to closest adjacent distance
 	first_nan_index = 0
 	i = 0
+	has_deep_gap = False
 	while i < len(distances):
+		if distances[i] > params["max_distance"]:
+			distances[i] = params["max_distance"]
+			has_deep_gap = True
 		distances[i] = min(distances[i], params["max_distance"])
 		if math.isnan(distances[i]) or distances[i] < 0.1:
 			first_nan_index = i
@@ -66,65 +70,42 @@ def callback(data):
 	for disparity in disparities:
 		closest_distance = distances[disparity[0]]
 
-		# print(closest_distance)
-		# print(params["car_width"] / (2 * closest_distance))
-
-		# if domain error, don't extend disparities
+		# if domain error for asin, don't extend disparities
 		if params["car_width"] / 2 >= closest_distance:
 			continue
 
 		n = int(math.ceil(2 * math.asin(params["car_width"] / (4 * closest_distance)) / data.angle_increment))
 
-		# print(n)
-
 		disparity_sign = disparity[1] - disparity[0]
 		for i in range(disparity[0], bound(disparity[0]+(n*disparity_sign), 0, len(distances)-1), disparity_sign):
 			distances[i] = min(distances[disparity[0]], distances[i])
 
-	# directly find index with deepest gap
-	deepest_gap = angle_to_index(0)
+	# find widest gap with max_distance, otherwise just find deepest gap
+	if has_deep_gap:
+		widest_gap = (0, 0) # (i, j) where there is a gap in range [i, j)
+		i = 0
+		while i < len(distances):
+			if -math.pi/2 < index_to_angle(i) < math.pi/2:
+				continue
+			if distances[i] == params["max_distance"]:
+				gap_start = i
+				while i < len(distances) and distances[i] == params["max_distance"]:
+					i += 1
+				gap_end = i
+				if gap_end - gap_start > widest_gap[1] - widest_gap[0]:
+					widest_gap = (gap_start, gap_end)
+			i += 1
 
-	# num_indices_from_zero_to_ninety = angle_to_index(0)-angle_to_index(-math.pi/2)
-
-	# print("dist straight ahead: ", distances[angle_to_index(0)])
-	# print(len(distances))
-
-	# window_left = angle_to_index(math.radians(-70))
-	# window_right = angle_to_index(math.radians(30))
-
-	# window_start = angle_to_index(math.radians(-60))
-
-	# for i in range(window_start, window_left, -1):
-	# 	if distances[i] > distances[deepest_gap]:
-	# 		deepest_gap = i
-	# for i in range(window_start, window_right):
-	# 	if distances[i] > distances[deepest_gap]:
-	# 		deepest_gap = i
-
-	# if distances[deepest_gap] < params["max_distance"]:
-	for i, distance in enumerate(distances):
-		if distance > distances[deepest_gap] and -math.pi/2 < index_to_angle(i) < math.pi/2:
-			deepest_gap = i
-
-	i = deepest_gap
-	j = deepest_gap
-
-	# while i-1 > 0 and abs(distances[i-1] - distances[i]) < params["disparity_threshold"]: i -= 1
-	# while j+1 < len(distances) and abs(distances[j+1] - distances[j]) < params["disparity_threshold"]: j += 1
-	while i > 0 and distances[i] == params["max_distance"]:
-		i -= 1
-	while j+1 < len(distances) and distances[j] == params["max_distance"]:
-		j += 1
-
-	avg_deepest_gap = (i+j)/2
-	deepest_gap = avg_deepest_gap
+		deepest_gap = (widest_gap[0] + widest_gap[1]) / 2
+	else:
+		deepest_gap = angle_to_index(0)
+		for i, distance in enumerate(distances):
+			if distance > distances[deepest_gap] and -math.pi/2 < index_to_angle(i) < math.pi/2:
+				deepest_gap = i
 			
-	# TODO: find widest max distance gap
-	# TODO: interpolate nans better if their close
-		
-	print("DEEPEST GAP: ", deepest_gap)
+	print("DEEPEST GAP: %d" % deepest_gap)
 	desired_angle = index_to_angle(deepest_gap)
-	print("desired_angle: ", math.degrees(desired_angle))
+	print("desired_angle: %f" % math.degrees(desired_angle))
 
 	msg = pid_input()
 	msg.pid_error = desired_angle
@@ -138,18 +119,15 @@ def callback(data):
 	pub.publish(msg)
 
 
-    # public to debug topic for rviz
+    # publish to debug topic for rviz
 	# RVIZ, red dots representing the gap detection, uses laserscan message type but isn't actually a laserscan.
 
-	#Not sure about these definitions
+	# Not sure about these definitions
 	index_width = 1
-	gap_start_index = avg_deepest_gap - index_width
-	gap_end_index = avg_deepest_gap + index_width
+	gap_start_index = deepest_gap - index_width
+	gap_end_index = deepest_gap + index_width
 	
-	#gap_start_index = max(0, gap_start_index)
-	#gap_end_index = min(len(data.ranges) - 1, gap_end_index)
-	
-	#Satisfy laserscan
+	# Satisfy laserscan
 	coles_gap = LaserScan()
 	coles_gap.header = data.header
 	coles_gap.angle_min = index_to_angle(gap_start_index)
@@ -160,7 +138,6 @@ def callback(data):
 	coles_gap.scan_time = data.scan_time
 	coles_gap.range_min = data.range_min
 	coles_gap.range_max = data.range_max
-
 	heading_pub.publish(coles_gap)
 
 	justins_gap = data
@@ -180,4 +157,3 @@ if __name__ == "__main__":
 	rospy.init_node('gap_finder',anonymous = True)
 	rospy.Subscriber("/car_9/scan",LaserScan,callback)
 	rospy.spin()
-
