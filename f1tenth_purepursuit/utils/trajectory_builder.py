@@ -38,7 +38,7 @@ if visualize:
 def save_plan():
     # Function to save the planned path into a CSV file
     # Modify the file path below to match the path on the racecar
-    file_path = os.path.expanduser('/home/nvidia/{}.csv'.format(trajectory_name))
+    file_path = os.path.expanduser('/home/nvidia/depend_ws/src/F1tenth_car_workspace/f1tenth-course-labs/{}.csv'.format(trajectory_name))
     with open(file_path, mode = 'w') as csv_file:
         csv_writer = csv.writer(csv_file, delimiter = ',', quoting = csv.QUOTE_NONNUMERIC)
         for index in range(0, len(plan)):
