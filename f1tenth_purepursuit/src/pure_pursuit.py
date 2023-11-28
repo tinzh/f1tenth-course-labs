@@ -13,6 +13,7 @@ from geometry_msgs.msg import PoseStamped
 import tf
 
 # Global variables for storing the path, path resolution, frame ID, and car details
+params              = {}
 plan                = []
 path_resolution     = []
 frame_id            = 'map'
@@ -90,6 +91,7 @@ def purepursuit_control_node(data):
             min_index = i
             min_distance = distance
 
+    pose_x, pose_y = plan[min_index]
 
     
     # Calculate heading angle of the car (in radians)
@@ -100,7 +102,7 @@ def purepursuit_control_node(data):
     
 
     # TODO 2: You need to tune the value of the lookahead_distance
-    lookahead_distance = 1.0
+    lookahead_distance = params["lookahead_distance"]
 
 
     # TODO 3: Utilizing the base projection found in TODO 1, your next task is to identify the goal or target point for the car.
@@ -127,26 +129,47 @@ def purepursuit_control_node(data):
     
     a = (m*m + 1)
     b = (2*k*m - 2*xc)
-    c = (k*k + xc*xc - d*d)
+    c = (k*k + xc*xc - lookahead_distance*lookahead_distance)
 
     x_poss1 = (-b - math.sqrt(b*b - 4*a*c)) / (2*a)
     x_poss2 = (-b + math.sqrt(b*b - 4*a*c)) / (2*a)
 
     # use solution inside x1
-    x = x_poss1 if x1 < x_poss1 < x2 or x2 < x_poss1 < x1 else x_poss2
-    y = m*x + j
+    target_x = x_poss1 if x1 < x_poss1 < x2 or x2 < x_poss1 < x1 else x_poss2
+    target_y = m*target_x + j
 
 
     # TODO 4: Implement the pure pursuit algorithm to compute the steering angle given the pose of the car, target point, and lookahead distance.
     # Your code here
 
+    # q0, q1, q2, q3 = data.pose.orientation
+    # curr_angle = math.atan2(2 * (q0*q3 + q1*q2), q0*q0 + q1*q1 - q2*q2 - q3*q3)
+    curr_angle = heading
+    desired_angle = math.atan2(target_y - odom_y, target_x - odom_x)
+    alpha = desired_angle - curr_angle
+    steering_angle = math.atan(2 * WHEELBASE_LEN * math.sin(alpha) / lookahead_distance)
+    turning_radius = lookahead_distance / (2*math.sin(alpha))
+
+    print("alpha: {}\tsteering angle: {}\tturning radius: {}".format(math.degrees(alpha), math.degrees(steering_angle), turning_radius))
+
 
     # TODO 5: Ensure that the calculated steering angle is within the STEERING_RANGE and assign it to command.steering_angle
     # Your code here    
+    # TODO: fix alignment
+    # TODO: translate from actual steering angle to msg value (-100 to 100) (maybe with turning radius?)
     command.steering_angle = 0.0
 
+
     # TODO 6: Implement Dynamic Velocity Scaling instead of a constant speed
-    command.speed = 20.0
+    speed = params["speed"]
+    thresholds = [(80, 1.0/2), (30, 3.0/4)]
+    for threshold, proportion in thresholds:
+        if abs(command.steering_angle) > threshold:
+            speed *= proportion
+            break
+    command.speed = speed
+
+
     command_pub.publish(command)
 
     # Visualization code
@@ -154,14 +177,6 @@ def purepursuit_control_node(data):
     # - odom_x, odom_y: Current position of the car
     # - pose_x, pose_y: Position of the base projection on the reference path
     # - target_x, target_y: Position of the goal/target point
-
-    # These are set to zero only so that the template code builds. 
-    pose_x=0    
-    pose_y=0
-    target_x=0
-    target_y=0
-
-
     base_link    = Point32()
     nearest_pose = Point32()
     nearest_goal = Point32()
@@ -178,9 +193,14 @@ def purepursuit_control_node(data):
     wp_seq = wp_seq + 1
     polygon_pub.publish(control_polygon)
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     try:
+        def get_input(name, default_value):
+            params[name] = float(raw_input("%s [%f]" % (name, default_value)) or str(default_value))
+
+        get_input("lookahead_distance", 1.0)
+        get_input("speed", 25)
 
         rospy.init_node('pure_pursuit', anonymous = True)
         if not plan:
@@ -191,7 +211,6 @@ if __name__ == '__main__':
         # The message type of that pose message is PoseStamped which belongs to the geometry_msgs ROS package.
         rospy.Subscriber('/{}/particle_filter/viz/inferred_pose'.format(car_name), PoseStamped, purepursuit_control_node)
         rospy.spin()
-
     except rospy.ROSInterruptException:
 
         pass
