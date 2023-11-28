@@ -77,6 +77,20 @@ def purepursuit_control_node(data):
     
     # Your code here
 
+    def calc_distance(x1, y1, x2, y2):
+        dx = x2 - x1
+        dy = y2 - y1
+        return math.sqrt(dx*dx + dy*dy)
+
+    min_index = -1
+    min_distance = 10000
+    for i, (x, y) in enumerate(plan):
+        distance = calc_distance(x, y, odom_x, odom_y)
+        if (distance < min_distance):
+            min_index = i
+            min_distance = distance
+
+
     
     # Calculate heading angle of the car (in radians)
     heading = tf.transformations.euler_from_quaternion((data.pose.orientation.x,
@@ -95,6 +109,32 @@ def purepursuit_control_node(data):
     # Calculate the position of this goal/target point along the path.
 
     # Your code here
+
+    i = min_index
+    while calc_distance(plan[i][0], plan[i][1], odom_x, odom_y) < lookahead_distance:
+        i = (i + 1) % len(plan)
+
+    far_index = i
+    close_index = (i - 1 + len(plan)) % len(plan)
+
+    x1, y1 = plan[close_index]
+    x2, y2 = plan[far_index]
+    xc, yc = odom_x, odom_y
+
+    m = (y2-y1) / (x2-x1)
+    j = y1 - m*x1
+    k = j + yc
+    
+    a = (m*m + 1)
+    b = (2*k*m - 2*xc)
+    c = (k*k + xc*xc - d*d)
+
+    x_poss1 = (-b - math.sqrt(b*b - 4*a*c)) / (2*a)
+    x_poss2 = (-b + math.sqrt(b*b - 4*a*c)) / (2*a)
+
+    # use solution inside x1
+    x = x_poss1 if x1 < x_poss1 < x2 or x2 < x_poss1 < x1 else x_poss2
+    y = m*x + j
 
 
     # TODO 4: Implement the pure pursuit algorithm to compute the steering angle given the pose of the car, target point, and lookahead distance.
