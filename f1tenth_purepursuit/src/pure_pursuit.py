@@ -85,13 +85,13 @@ def purepursuit_control_node(data):
 
     min_index = -1
     min_square_distance = 10000
-    for i, (x, y) in enumerate(plan):
+    for i, (x, y, _, _) in enumerate(plan):
         square_distance = calc_square_distance(x, y, odom_x, odom_y)
         if (square_distance < min_square_distance):
             min_index = i
             min_square_distance = square_distance
 
-    pose_x, pose_y = plan[min_index]
+    pose_x, pose_y, _, _ = plan[min_index]
 
     
     # Calculate heading angle of the car (in radians)
@@ -120,9 +120,11 @@ def purepursuit_control_node(data):
     far_index = i
     close_index = (i - 1 + len(plan)) % len(plan)
 
-    x1, y1 = plan[close_index]
-    x2, y2 = plan[far_index]
+    x1, y1, _, _ = plan[close_index]
+    x2, y2, _, _ = plan[far_index]
     xc, yc = odom_x, odom_y
+
+    print("p1, p2, pc: ({}, {})\t({}, {})\t({}, {})".format(x1, y1, x2, y2, xc, yc))
 
     m = (y2-y1) / (x2-x1)
     j = y1 - m*x1
