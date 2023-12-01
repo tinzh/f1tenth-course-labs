@@ -114,32 +114,39 @@ def purepursuit_control_node(data):
     # Your code here
 
     i = min_index
-    while calc_square_distance(plan[i][0], plan[i][1], odom_x, odom_y) < lookahead_square_distance:
-        i = (i + 1) % len(plan)
+    curr_distance = 0
+    while curr_distance < lookahead_distance:
+        curr_distance += path_resolution[i]
+        i += 1
+    target_x, target_y, _, _ = path[i]
 
-    far_index = i
-    close_index = (i - 1 + len(plan)) % len(plan)
-
-    x1, y1, _, _ = plan[close_index]
-    x2, y2, _, _ = plan[far_index]
-    xc, yc = odom_x, odom_y
-
-    print("p1, p2, pc: ({}, {})\t({}, {})\t({}, {})".format(x1, y1, x2, y2, xc, yc))
-
-    m = (y2-y1) / (x2-x1)
-    j = y1 - m*x1
-    k = j + yc
-    
-    a = (m*m + 1)
-    b = (2*k*m - 2*xc)
-    c = (k*k + xc*xc - lookahead_distance*lookahead_distance)
-
-    x_poss1 = (-b - math.sqrt(b*b - 4*a*c)) / (2*a)
-    x_poss2 = (-b + math.sqrt(b*b - 4*a*c)) / (2*a)
-
-    # use solution inside x1
-    target_x = x_poss1 if x1 < x_poss1 < x2 or x2 < x_poss1 < x1 else x_poss2
-    target_y = m*target_x + j
+    # i = min_index
+    # while calc_square_distance(plan[i][0], plan[i][1], odom_x, odom_y) < lookahead_square_distance:
+    #     i = (i + 1) % len(plan)
+    #
+    # far_index = i
+    # close_index = (i - 1 + len(plan)) % len(plan)
+    #
+    # x1, y1, _, _ = plan[close_index]
+    # x2, y2, _, _ = plan[far_index]
+    # xc, yc = odom_x, odom_y
+    #
+    # print("p1, p2, pc: ({}, {})\t({}, {})\t({}, {})".format(x1, y1, x2, y2, xc, yc))
+    #
+    # m = (y2-y1) / (x2-x1)
+    # j = y1 - m*x1
+    # k = j + yc
+    # 
+    # a = (m*m + 1)
+    # b = (2*k*m - 2*xc)
+    # c = (k*k + xc*xc - lookahead_distance*lookahead_distance)
+    #
+    # x_poss1 = (-b - math.sqrt(b*b - 4*a*c)) / (2*a)
+    # x_poss2 = (-b + math.sqrt(b*b - 4*a*c)) / (2*a)
+    #
+    # # use solution inside x1
+    # target_x = x_poss1 if x1 < x_poss1 < x2 or x2 < x_poss1 < x1 else x_poss2
+    # target_y = m*target_x + j
 
 
     # TODO 4: Implement the pure pursuit algorithm to compute the steering angle given the pose of the car, target point, and lookahead distance.
