@@ -78,18 +78,18 @@ def purepursuit_control_node(data):
     
     # Your code here
 
-    def calc_distance(x1, y1, x2, y2):
+    def calc_square_distance(x1, y1, x2, y2):
         dx = x2 - x1
         dy = y2 - y1
-        return math.sqrt(dx*dx + dy*dy)
+        return dx*dx + dy*dy
 
     min_index = -1
-    min_distance = 10000
+    min_square_distance = 10000
     for i, (x, y) in enumerate(plan):
-        distance = calc_distance(x, y, odom_x, odom_y)
-        if (distance < min_distance):
+        square_distance = calc_square_distance(x, y, odom_x, odom_y)
+        if (square_distance < min_square_distance):
             min_index = i
-            min_distance = distance
+            min_square_distance = square_distance
 
     pose_x, pose_y = plan[min_index]
 
@@ -103,6 +103,7 @@ def purepursuit_control_node(data):
 
     # TODO 2: You need to tune the value of the lookahead_distance
     lookahead_distance = params["lookahead_distance"]
+    lookahead_square_distance = lookahead_distance * lookahead_distance
 
 
     # TODO 3: Utilizing the base projection found in TODO 1, your next task is to identify the goal or target point for the car.
@@ -113,7 +114,7 @@ def purepursuit_control_node(data):
     # Your code here
 
     i = min_index
-    while calc_distance(plan[i][0], plan[i][1], odom_x, odom_y) < lookahead_distance:
+    while calc_square_distance(plan[i][0], plan[i][1], odom_x, odom_y) < lookahead_square_distance:
         i = (i + 1) % len(plan)
 
     far_index = i
