@@ -21,7 +21,7 @@ car_name            = str(sys.argv[1])
 trajectory_name     = str(sys.argv[2])
 
 # Publishers for sending driving commands and visualizing the control polygon
-command_pub         = rospy.Publisher('/{}/offboard/command'.format(car_name), AckermannDrive, queue_size = 1)
+command_pub         = rospy.Publisher('/car_9/offboard/command', AckermannDrive, queue_size = 1)
 polygon_pub         = rospy.Publisher('/{}/purepursuit_control/visualize'.format(car_name), PolygonStamped, queue_size = 1)
 
 # Global variables for waypoint sequence and current polygon
@@ -113,12 +113,12 @@ def purepursuit_control_node(data):
 
     # Your code here
 
-    i = min_index
+    i = min_index % len(path_resolution)
     curr_distance = 0
     while curr_distance < lookahead_distance:
         curr_distance += path_resolution[i]
-        i += 1
-    target_x, target_y, _, _ = path[i]
+        i = (i+1) % len(path_resolution)
+    target_x, target_y, _, _ = plan[i]
 
     # i = min_index
     # while calc_square_distance(plan[i][0], plan[i][1], odom_x, odom_y) < lookahead_square_distance:
@@ -167,16 +167,22 @@ def purepursuit_control_node(data):
     # Your code here    
     # TODO: fix alignment
     # TODO: translate from actual steering angle to msg value (-100 to 100) (maybe with turning radius?)
-    command.steering_angle = 0.0
+    command.steering_angle = 100.0
+    left_max = math.radians(31.5)
+    right_max = math.radians(24.5)
 
+    if steering_angle < 0: 
+        command.steering_angle = max(-100.0, steering_angle * 100.0 / left_max)
+    else: 
+        command.steering_angle = min(100.0, steering_angle * 100.0 / right_max)
 
     # TODO 6: Implement Dynamic Velocity Scaling instead of a constant speed
     speed = params["speed"]
     thresholds = [(80, 1.0/2), (30, 3.0/4)]
     for threshold, proportion in thresholds:
-        if abs(command.steering_angle) > threshold:
-            speed *= proportion
-            break
+       if abs(command.steering_angle) > threshold:
+           speed *= proportion
+           break
     command.speed = speed
 
 

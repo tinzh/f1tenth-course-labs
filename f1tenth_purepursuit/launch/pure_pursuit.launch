@@ -1,34 +1,7 @@
-  ~/f1tenth-course-labs
-    autoturtle
-    beginner_tutorials
-    f1tenth_purepursuit
-   │  launch
-   │  path
-   │ └ 󰈙 test.csv
-   │  src
-   │  utils
-   │  CMakeLists.txt
-   └ 󰗀 package.xml
-     (1 hidden item)
-    race
-   │  launch
-   │ │ * find_the_gap.launch
-   │ └ * wall-following.la 󰄱 
-       (1 hidden item)
-   │  msg
-   │  src
-   │ │  control.py
-   │ │  dist_finder.py
-   │ │  gap_control.py
-   │ │  gap_finder.py
-   │ └  scan_test.py
-       (1 hidden item)
-   │  CMakeLists.txt
-   └ 󰗀 package.xml
-     (1 hidden item)
-   * 2023-11-02-19-18-23.bag
-    README.md
-   * lab03_rviz.rviz
-   * pure_pursuit.launch     
-   󰈙 raceline.csv
-   (3 hidden items)
+<launch>
+    <include file="$(find move_base)/launch/move_base.launch">
+        <arg name="listen_offboard" value="true" />
+    </include>
+    <include file="$(find particle_filter)/launch/slam.launch" />
+    <node pkg="f1tenth_purepursuit" type="pure_pursuit.py" name="pure_pursuit" launch-prefix="xterm -e" args="car_9 raceline" />
+</launch>
