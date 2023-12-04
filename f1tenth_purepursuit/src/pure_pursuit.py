@@ -215,8 +215,8 @@ if __name__ == '__main__':
         def get_input(name, default_value):
             params[name] = float(raw_input("%s [%f]" % (name, default_value)) or str(default_value))
 
-        get_input("lookahead_distance", 1.0)
-        get_input("speed", 25)
+        get_input("lookahead_distance", 1.5)
+        get_input("speed", 45)
 
         rospy.init_node('pure_pursuit', anonymous = True)
         if not plan:
