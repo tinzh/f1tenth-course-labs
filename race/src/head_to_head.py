@@ -58,7 +58,7 @@ def index_to_angle(index):
 def angle_to_index(angle):
     return int((angle - lidar_data.angle_min)/lidar_data.angle_increment)
 
-def get_ftg_target(target_heading):
+def get_ftg_target(odom_x, odom_y, target_heading):
     distances = lidar_data.ranges
     
     # convert all small distances to NaN
@@ -106,13 +106,18 @@ def get_ftg_target(target_heading):
         if delta > params["disparity_threshold"]:
             disparities.append((i, i+1))
         elif -delta > params["disparity_threshold"]:
-            diisparities.append((i+1, i))
+            disparities.append((i+1, i))
 
     # extend disparities (closest to farthest)
     disparities.sort(key=lambda disparity: distances[disparity[0]])
     for disparity in disparities:
         d = distances[disparity[0]]
-        n = int(math.ceil(2 * math.asin(params["car_width"]/(4*d)) / data.angle_increment))
+
+        # if domain error, don't extend disparity
+        if params["car_width"] / 2 > d:
+            continue
+
+        n = int(math.ceil(2 * math.asin(params["car_width"]/(4*d)) / lidar_data.angle_increment))
         if disparity[1] - disparity[0] == 1: 
             # extend to the right
             for i in range(disparity[0], min(len(distances), disparity[0] + n)):
@@ -123,7 +128,28 @@ def get_ftg_target(target_heading):
                 distances[i] = min(d, distances[i])
 
 
-    # TODO: find target
+    # TODO: refine this
+    # idea: maybe path towards edge of gap?
+    # find gap closest to given heading
+    start_i = angle_to_index(target_heading)
+    best_i = start_i
+    for i in range(angle_to_index(-math.pi/2), angle_to_index(math.pi/2)):
+        if distances[i] == distances[best_i] and abs(i - start_i) < abs(best_i - start_i):
+            # same depth but closer to pure pursuit heading
+            best_i = i
+        elif distances[i] > distances[best_i]:
+            # larger depth
+            best_i = i
+
+    # set target point at gappiest point of gap
+    if best_i == start_i:
+        d = distances[best_i]
+    elif best_i < start_i:
+        d = distances[best_i + 1]
+    else:
+        d = distances[best_i - 1]
+    theta = index_to_angle(best_i)
+    return odom_x + d*math.cos(theta), odom_y + d*math.sin(theta)
 
 def get_purepursuit_target(odom_x, odom_y):
     def calc_square_distance(x1, y1, x2, y2):
@@ -158,16 +184,21 @@ def control(data):
     odom_y = data.pose.position.y
 
     # Use pure pursuit
-    target_x, target_y = calc_purepursuit_target(odom_x, odom_y)
+    target_x, target_y = get_purepursuit_target(odom_x, odom_y)
+    purepursuit_desired_angle = math.atan2(target_y - odom_y, target_x - odom_x)
+
+    # Confirm with find the gap
+    target_x, target_y = get_ftg_target(odom_x, odom_y, purepursuit_desired_angle)
 
     # Calculate current heading angle (radians)
     q = data.pose.orientation
     heading = tf.transformations.euler_from_quaternion((q.x, q.y, q.z, q.w))[2]
 
-	# Get alpha from position and target
+    # Get alpha from position and target
     desired_angle = math.atan2(target_y - odom_y, target_x - odom_x)
     alpha = desired_angle - heading
-    steering_angle = math.atan(2 * WHEELBASE_LEN * math.sin(alpha) / params["lookahead_distance"])
+    steering_angle = math.atan(2 * WHEELBASE_LEN * math.sin(alpha) / math.dist((odom_x, odom_y), (target_x, target_y)))
+    # steering_angle = math.atan(2 * WHEELBASE_LEN * math.sin(alpha) / params["lookahead_distance"])
     turning_radius = WHEELBASE_LEN / math.tan(alpha)
 
     print("alpha: {}\tsteering angle: {}".format(math.degrees(alpha), math.degrees(steering_angle)))
