@@ -59,7 +59,7 @@ def angle_to_index(angle):
     return int((angle - lidar_data.angle_min)/lidar_data.angle_increment)
 
 def get_ftg_target(odom_x, odom_y, target_heading):
-    distances = lidar_data.ranges
+    distances = list(lidar_data.ranges)
     
     # convert all small distances to NaN
     for i, d in enumerate(distances):
@@ -175,7 +175,7 @@ def get_purepursuit_target(odom_x, odom_y):
         i = (i+1) % len(path_resolution)
     target_x, target_y, _, _ = plan[i]
 
-    return target_x, target_y
+    return target_x, target_y, pose_x, pose_y
 
 # Main decision-making callback
 def control(data):
@@ -184,7 +184,7 @@ def control(data):
     odom_y = data.pose.position.y
 
     # Use pure pursuit
-    target_x, target_y = get_purepursuit_target(odom_x, odom_y)
+    target_x, target_y, pose_x, pose_y = get_purepursuit_target(odom_x, odom_y)
     purepursuit_desired_angle = math.atan2(target_y - odom_y, target_x - odom_x)
 
     # Confirm with find the gap
@@ -197,7 +197,9 @@ def control(data):
     # Get alpha from position and target
     desired_angle = math.atan2(target_y - odom_y, target_x - odom_x)
     alpha = desired_angle - heading
-    steering_angle = math.atan(2 * WHEELBASE_LEN * math.sin(alpha) / math.dist((odom_x, odom_y), (target_x, target_y)))
+    dx = target_x - odom_x
+    dy = target_y - odom_y
+    steering_angle = math.atan(2 * WHEELBASE_LEN * math.sin(alpha) / math.sqrt(dx*dx + dy*dy))
     # steering_angle = math.atan(2 * WHEELBASE_LEN * math.sin(alpha) / params["lookahead_distance"])
     turning_radius = WHEELBASE_LEN / math.tan(alpha)
 
@@ -237,9 +239,9 @@ def control(data):
     base_link    = Point32(odom_x, odom_y, 0)
     nearest_pose = Point32(pose_x, pose_y, 0)
     nearest_goal = Point32(target_x, target_y, 0)
-	control_polygon = PolygonStamped(Header(wp_seq, rospy.Time.now(), frame_id), Polygon([nearest_pose, base_link, nearest_goal]))
-	wp_seq = wp_seq + 1
-	polygon_pub.publish(control_polygon)
+    control_polygon = PolygonStamped(Header(wp_seq, rospy.Time.now(), frame_id), Polygon([nearest_pose, base_link, nearest_goal]))
+    wp_seq = wp_seq + 1
+    polygon_pub.publish(control_polygon)
 
 
 if __name__ == '__main__':
