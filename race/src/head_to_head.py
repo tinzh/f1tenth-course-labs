@@ -188,7 +188,7 @@ def control(data):
     purepursuit_desired_angle = math.atan2(target_y - odom_y, target_x - odom_x)
 
     # Confirm with find the gap
-    target_x, target_y = get_ftg_target(odom_x, odom_y, purepursuit_desired_angle)
+    # target_x, target_y = get_ftg_target(odom_x, odom_y, purepursuit_desired_angle)
 
     # Calculate current heading angle (radians)
     q = data.pose.orientation
