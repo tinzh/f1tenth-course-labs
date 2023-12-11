@@ -41,14 +41,14 @@ def downsample_dist(line, dist):
 # avg = pd.read_csv("cleaned_averaged_raceline.csv")
 # avg.columns = ["x", "y"]
 
-data = pd.read_csv("coles_raceline.csv")
+data = pd.read_csv("justins_raceline.csv")
 data.columns = ["X", "Y", "Z", "W"]
 
 line = np.column_stack([np.asarray(data['X']), np.asarray(data['Y'])])
 
 new_line = line
 
-sig = 2
+sig = 3
 x_smooth = scipy.ndimage.gaussian_filter1d(new_line[:,0], sigma=sig)
 y_smooth = scipy.ndimage.gaussian_filter1d(new_line[:,1], sigma=sig)
 
@@ -64,7 +64,7 @@ y_smooth_new = [(i-origin_y)/resolution for i in y_smooth_new][5:-5]
 
 
 # Create DataFrame from points_x and points_y
-raceline_data = pd.DataFrame({'x': x_smooth_new, 'y': y_smooth_new})
+raceline_data = pd.DataFrame({'x': x_smooth, 'y': y_smooth})
 
 # print(raceline_data)
 
@@ -98,6 +98,8 @@ line = np.column_stack([np.asarray(extended_raceline_data['x']), np.asarray(exte
 new_line = downsample_dist(line, 0.1/resolution)
 plot_x = new_line[:,0]
 plot_y = new_line[:,1]
+plot_x_scaled = plot_x*resolution + origin_x
+plot_y_scaled = plot_y*resolution + origin_y
 
 # Plotting the points on the map
 plt.figure(figsize=(12, 12))
@@ -114,8 +116,8 @@ plt.xlabel('Pixel X')
 plt.ylabel('Pixel Y')
 plt.show()
 
-export_data = pd.DataFrame({'plot_x': plot_x, 'plot_y': plot_y})
+export_data = pd.DataFrame({'plot_x': plot_x_scaled, 'plot_y': plot_y_scaled})
 
 # Exporting the DataFrame to a CSV file
-export_csv_path = 'coles_filtered_raceline.csv'
-export_data.to_csv(export_csv_path, index=False)
+export_csv_path = 'justins_scaled_raceline.csv'
+export_data.to_csv(export_csv_path, index=False, header=None)
