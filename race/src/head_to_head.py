@@ -233,8 +233,6 @@ def control(data):
     else: 
         command.steering_angle = min(100.0, steering_angle * 100.0 / right_max)
 
-    lidar_dist_halfway_between_zero_and_steering_angle = sum([(lidar_data.ranges[i] if (not math.isnan(lidar_data.ranges[i]) and not lidar_data.ranges[i] < 0.2) else 2.5) for i in range(angle_to_index(steering_angle/2)-5, angle_to_index(steering_angle/2)+5)])/10
-    obstacle_data.append((odom_x, odom_y, lidar_dist_halfway_between_zero_and_steering_angle))
     
 
 	# Publish speed (with velocity scaling)
@@ -245,18 +243,31 @@ def control(data):
     #        speed *= proportion
     #        break
     # command.speed = speed
+    
+    speed_scaled_by_lookahead_and_obstacles = 0
 
     max_lookahead = max(map(lambda la: la[2], plan))
     min_lookahead = min(map(lambda la: la[2], plan))
 
-    if lookahead == max_lookahead: command.speed = params["speed"]
-    elif lookahead == min_lookahead: command.speed = params["speed"]*params["speed_reduction_2"]
-    else : command.speed = params["speed"]*params["speed_reduction_1"]
+    if lookahead == max_lookahead: speed_from_lookahead_and_obstacles = params["speed"]
+    elif lookahead == min_lookahead: speed_from_lookahead_and_obstacles = params["speed"]*params["speed_reduction_2"]
+    else : speed_from_lookahead_and_obstacles = params["speed"]*params["speed_reduction_1"]
 
     print("alpha: {}\tsteering angle: {}\tspeed: {}".format(math.degrees(alpha), math.degrees(steering_angle), command.speed))
-    
-    command_pub.publish(command)
 
+    avg_lidar_dist_halfway_between_zero_and_steering_angle = sum([(lidar_data.ranges[i] if (not math.isnan(lidar_data.ranges[i]) and not lidar_data.ranges[i] < 0.2) else 2.5) for i in range(angle_to_index(steering_angle/2)-5, angle_to_index(steering_angle/2)+5)])/10
+    obstacle_data.append((odom_x, odom_y, avg_lidar_dist_halfway_between_zero_and_steering_angle))
+
+    obstacle_threshold = 1.0
+    speed_obstacle_scale = 0.5
+
+    if avg_lidar_dist_halfway_between_zero_and_steering_angle < obstacle_threshold:
+        speed_scaled_by_lookahead_and_obstacles = speed_scaled_by_lookahead_and_obstacles * speed_obstacle_scale
+        print(" !! OBSTACLE !! ")
+
+    command.speed = speed_scaled_by_lookahead_and_obstacles
+
+    command_pub.publish(command)
     ##########################################################################
 
     # Visualization code
