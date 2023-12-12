@@ -12,6 +12,7 @@ from matplotlib.lines import Line2D
 from matplotlib.artist import Artist
 from matplotlib.patches import Polygon
 from matplotlib import colormaps
+from matplotlib.widgets import TextBox
 
 # helper function
 def point_to_line_dist(point, line):
@@ -128,14 +129,22 @@ def smooth_raceline(x, y, num_points=300):
 # return x,y from csv
 def load_raceline(path):
     data = pd.read_csv(path)
-    return (data.iloc[:,0] - origin_x) / resolution, (data.iloc[:,1] - origin_y) / resolution;
+    x = (data.iloc[:,0].to_numpy() - origin_x) / resolution
+    y = (data.iloc[:,1].to_numpy() - origin_y) / resolution
+    if len(data.columns) >= 3:
+        lookaheads = data.iloc[:,2].to_numpy()
+    else:
+        lookaheads = np.full(len(x), 1.5)
+
+    return x, y, lookaheads
 
 # saves x,y to csv
-def save_raceline(x, y, path):
+def save_raceline(x, y, lookaheads, path):
+    print(len(x), len(y), len(lookaheads))
     # Exporting the DataFrame to a CSV file
     plot_x_scaled = x*resolution + origin_x
     plot_y_scaled = y*resolution + origin_y
-    export_data = pd.DataFrame({'plot_x': plot_x_scaled, 'plot_y': plot_y_scaled})
+    export_data = pd.DataFrame({'plot_x': plot_x_scaled, 'plot_y': plot_y_scaled, 'lookaheads': lookaheads})
     export_csv_path = path
     export_data.to_csv(export_csv_path, index=False, header=None)
 
@@ -161,58 +170,54 @@ class PolygonInteractor(object):
 
     showverts = True
     epsilon = 15  # max pixel distance to count as a vertex hit
+    legend = None
+    lookahead_i = None
 
-    def __init__(self, ax, poly):
-        if poly.figure is None:
-            raise RuntimeError('You must first add the polygon to a figure '
-                               'or canvas before defining the interactor')
+    def __init__(self, ax, x, y, lookaheads):
+        if x[0] != x[-1] or y[0] != y[-1]:
+            x = np.append(x, x[0])
+            y = np.append(y, y[0])
+            lookaheads = np.append(lookaheads, lookaheads[0])
         self.ax = ax
-        canvas = poly.figure.canvas
-        self.poly = poly
+        self.canvas = ax.figure.canvas
+        self.scatter = ax.scatter(x, y, animated=True, c=np.linspace(0, 2.5, len(x)), cmap="hsv")
+        self.x = x
+        self.y = y
+        self.lookaheads = lookaheads
+        self.line = Line2D(x, y, animated=True)
+        ax.add_line(self.line)
 
-        x, y = zip(*self.poly.xy)
-        self.line = Line2D(x, y,
-                           marker='o', markerfacecolor='r',
-                           animated=True)
-        self.ax.add_line(self.line)
-
-        self.cid = self.poly.add_callback(self.poly_changed)
         self._ind = None  # the active vert
 
-        self.num_smooth_points = 100
+        self.num_smooth_points = 300
         self.smooth = False
-        global plot_x, plot_y
+
+        self.default_lookahead = 1.5
+        self.lookaheads = np.full(self.num_smooth_points, self.default_lookahead)
+
+        global plot_x, plot_y, lookahead
         plot_x, plot_y = x, y
+        lookahead = self.default_lookahead
 
         self.ax.set_title("Raceline")
 
-        canvas.mpl_connect('draw_event', self.draw_callback)
-        canvas.mpl_connect('button_press_event', self.button_press_callback)
-        canvas.mpl_connect('key_press_event', self.key_press_callback)
-        canvas.mpl_connect('button_release_event', self.button_release_callback)
-        canvas.mpl_connect('motion_notify_event', self.motion_notify_callback)
-        self.canvas = canvas
+        self.canvas.mpl_connect('draw_event', self.draw_callback)
+        self.canvas.mpl_connect('button_press_event', self.button_press_callback)
+        self.canvas.mpl_connect('key_press_event', self.key_press_callback)
+        self.canvas.mpl_connect('button_release_event', self.button_release_callback)
+        self.canvas.mpl_connect('motion_notify_event', self.motion_notify_callback)
 
     def draw_callback(self, event):
         self.background = self.canvas.copy_from_bbox(self.ax.bbox)
-        self.ax.draw_artist(self.poly)
+        self.ax.draw_artist(self.scatter)
         self.ax.draw_artist(self.line)
-        # do not need to blit here, this will fire before the screen is
-        # updated
-
-    def poly_changed(self, poly):
-        'this method is called whenever the polygon object is called'
-        # only copy the artist props to the line (except visibility)
-        vis = self.line.get_visible()
-        Artist.update_from(self.line, poly)
-        self.line.set_visible(vis)  # don't use the poly visibility state
 
     def get_ind_under_point(self, event):
         'get the index of the vertex under point if within epsilon tolerance'
 
         # display coords
-        xy = np.asarray(self.poly.xy)
-        xyt = self.poly.get_transform().transform(xy)
+        xy = np.c_[self.x, self.y]
+        xyt = self.scatter.get_offset_transform().transform(xy)
         xt, yt = xyt[:, 0], xyt[:, 1]
         d = np.hypot(xt - event.x, yt - event.y)
         indseq, = np.nonzero(d == d.min())
@@ -225,19 +230,13 @@ class PolygonInteractor(object):
 
     def button_press_callback(self, event):
         'whenever a mouse button is pressed'
-        if not self.showverts:
-            return
-        if event.inaxes is None:
-            return
-        if event.button != 1:
+        if not self.showverts or event.inaxes is None or event.button != 1:
             return
         self._ind = self.get_ind_under_point(event)
 
     def button_release_callback(self, event):
         'whenever a mouse button is released'
-        if not self.showverts:
-            return
-        if event.button != 1:
+        if not self.showverts or event.button != 1:
             return
         self._ind = None
 
@@ -246,85 +245,91 @@ class PolygonInteractor(object):
         if not event.inaxes:
             return
         if event.key == 't':
-            self.showverts = not self.showverts
-            self.line.set_visible(self.showverts)
-            if not self.showverts:
-                self._ind = None
+            i = self.get_ind_under_point(event)
+            if self.lookahead_i is None:
+                self.lookahead_i = i
+            elif i is not None:
+                begin = self.lookahead_i
+                end = i
+                
+                print(f"Changing from {begin} to {end}")
+
+                global lookahead
+                if begin < end:
+                    self.lookaheads[begin:end+1] = lookahead
+                else:
+                    self.lookaheads[begin:] = lookahead
+                    self.lookaheads[:end+1] = lookahead
+                self.lookahead_i = None
         elif event.key == 'd':
             ind = self.get_ind_under_point(event)
+            print("before here")
             if ind is not None:
-                self.poly.xy = np.delete(self.poly.xy,
-                                         ind, axis=0)
-                self.line.set_data(zip(*self.poly.xy))
+                self.x = np.delete(self.x, ind)
+                self.y = np.delete(self.y, ind)
+                self.lookaheads = np.delete(self.lookaheads, ind)
         elif event.key == 'i':
-            xys = self.poly.get_transform().transform(self.poly.xy)
+            xys = self.scatter.get_offset_transform().transform(np.c_[self.x, self.y])
             p = event.x, event.y  # display coords
             for i in range(len(xys) - 1):
                 s0 = xys[i]
                 s1 = xys[i + 1]
                 d = point_to_line_dist(p, (s0, s1))
                 if d <= self.epsilon:
-                    self.poly.xy = np.insert(
-                        self.poly.xy, i+1,
-                        [event.xdata, event.ydata],
-                        axis=0)
-                    self.line.set_data(zip(*self.poly.xy))
+                    self.x = np.insert(self.x, i+1, event.xdata)
+                    self.y = np.insert(self.y, i+1, event.ydata)
                     break
         elif event.key == 'x':
-            print("here")
             if self.smooth:
                 print("reverting")
                 # need to revert back to unsmooth
-                self.poly.xy = np.column_stack([self.x, self.y])
-                global plot_x, plot_y
-                plot_x, plot_y = self.x, self.y
+                self.x, self.y = self.original_x, self.original_y
                 self.smooth = False
             else:
                 # need to smooth out 
                 print("smoothing")
-                self.x = self.poly.xy[:,0]
-                self.y = self.poly.xy[:,1]
-                
-                x_smooth, y_smooth = smooth_raceline(self.x, self.y)
-                self.poly.xy = np.column_stack([x_smooth, y_smooth])
-                plot_x, plot_y = x_smooth, y_smooth
+                self.original_x, self.original_y = self.x, self.y
+                self.x, self.y = smooth_raceline(self.x, self.y, self.num_smooth_points)
+                # self.scatter.set_array(self.lookaheads)
                 self.smooth = True
 
-            self.redraw()
+        self.redraw()
 
-        if self.line.stale:
-            self.canvas.draw_idle()
+        if self.scatter.stale:
+            self.scatter.draw_idle()
 
     def motion_notify_callback(self, event):
         'on mouse movement'
-        if not self.showverts:
+        if not self.showverts or self._ind is None or event.inaxes is None or event.button != 1:
             return
-        if self._ind is None:
-            return
-        if event.inaxes is None:
-            return
-        if event.button != 1:
-            return
+
         x, y = event.xdata, event.ydata
 
-        self.poly.xy[self._ind] = x, y
+        self.x[self._ind] = x
+        self.y[self._ind] = y
         if self._ind == 0:
-            self.poly.xy[-1] = x, y
-        elif self._ind == len(self.poly.xy) - 1:
-            self.poly.xy[0] = x, y
+            self.x[-1], self.y[-1] = x, y
+        elif self._ind == len(self.x) - 1:
+            self.x[0], self.y[0] = x, y
 
         self.redraw()
 
     def redraw(self):
-        self.line.set_data(zip(*self.poly.xy))
-        self.canvas.restore_region(self.background)
-        self.ax.draw_artist(self.poly)
-        self.ax.draw_artist(self.line)
-        self.canvas.blit(self.ax.bbox)
+        # save to globals
+        global plot_x, plot_y, plot_l
+        plot_x, plot_y = self.x, self.y
+        plot_l = self.lookaheads
 
-        global plot_x, plot_y
-        plot_x = self.poly.xy[:,0]
-        plot_y = self.poly.xy[:,1]
+        self.scatter.set_offsets(np.c_[self.x, self.y])
+        self.line.set_data(self.x, self.y)
+        self.scatter.set_array(self.lookaheads)
+        self.legend = self.ax.legend(*self.scatter.legend_elements(), title="lookahead")
+
+        self.canvas.restore_region(self.background)
+        self.ax.draw_artist(self.scatter)
+        self.ax.draw_artist(self.line)
+        self.ax.draw_artist(self.legend)
+        self.canvas.blit(self.ax.bbox)
 
 # plots racelines, iterable of (x,y) racelines
 def draw_racelines(racelines):
@@ -340,19 +345,33 @@ def draw_racelines(racelines):
 
     plt.show()
 
-def draw_polygon(x, y):
-    poly = Polygon(np.column_stack([x, y]), animated=True, fill=False)
+def draw_polygon(x, y, lookaheads):
     fig, ax = plt.subplots()
-    ax.add_patch(poly)
-    p = PolygonInteractor(ax, poly)
     ax.set_xlim((60, 220))
     ax.set_ylim((35, 205))
     ax.imshow(map_image, cmap='gray')
+
+    p = PolygonInteractor(ax, x, y, lookaheads)
+
+    def submit_lookahead(text):
+        global lookahead
+        lookahead = float(text)
+        print(f"Changing lookahead to {lookahead}")
+        p.redraw()
+
+    axbox = fig.add_axes([0.1, 0.05, 0.8, 0.075])
+    text_box = TextBox(axbox, "Lookahead distance")
+    text_box.on_submit(submit_lookahead)
+    text_box.set_val("1.5")
+
     plt.show()
-    return plot_x, plot_y
+
+    return plot_x, plot_y, plot_l
 
 load_map("coles_map_2.yaml")
-x, y = load_raceline("justins_rough.csv")
+x, y, lookaheads = load_raceline("justins_rough.csv")
 # x, y = downsample(x, y, 10)
-x, y = draw_polygon(x, y)
-save_raceline(x, y, input("Enter output filename: "))
+x, y, lookaheads = draw_polygon(x, y, lookaheads)
+
+print(len(lookaheads))
+save_raceline(x, y, lookaheads, input("Enter output filename: "))
