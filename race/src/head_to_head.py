@@ -253,7 +253,6 @@ def control(data):
     elif lookahead == min_lookahead: command.speed = params["speed"]*params["speed_reduction_2"]
     else : command.speed = params["speed"]*params["speed_reduction_1"]
 
-    print("alpha: {}\tsteering angle: {}\tspeed: {}".format(math.degrees(alpha), math.degrees(steering_angle), command.speed))
 
     avg_lidar_dist_halfway_between_zero_and_steering_angle = sum([(lidar_data.ranges[i] if (not math.isnan(lidar_data.ranges[i]) and not lidar_data.ranges[i] < 0.2) else 2.5) for i in range(angle_to_index(steering_angle/2)-5, angle_to_index(steering_angle/2)+5)])/10
     obstacle_data.append((odom_x, odom_y, avg_lidar_dist_halfway_between_zero_and_steering_angle))
@@ -262,9 +261,10 @@ def control(data):
     speed_obstacle_scale = 0.5
 
     if avg_lidar_dist_halfway_between_zero_and_steering_angle < obstacle_threshold:
-        command.speed = command.speed * speed_obstacle_scale
+        command.speed *= speed_obstacle_scale
         print(" !! OBSTACLE !! ")
 
+    print("alpha: {}\tsteering angle: {}\tspeed: {}".format(math.degrees(alpha), math.degrees(steering_angle), command.speed))
     # command.speed = speed_scaled_by_lookahead_and_obstacles
 
     command_pub.publish(command)
