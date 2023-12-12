@@ -232,7 +232,7 @@ def control(data):
     else: 
         command.steering_angle = min(100.0, steering_angle * 100.0 / right_max)
 
-    lidar_dist_halfway_between_zero_and_steering_angle = lidar_data[angle_to_index(steering_angle/2)]
+    lidar_dist_halfway_between_zero_and_steering_angle = lidar_data.ranges[angle_to_index(steering_angle/2)]
     obstacle_data.append((odom_x, odom_y, lidar_dist_halfway_between_zero_and_steering_angle))
     
 
