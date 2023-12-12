@@ -263,7 +263,7 @@ def control(data):
 
     if avg_lidar_dist_halfway_between_zero_and_steering_angle < obstacle_threshold:
         speed_scaled_by_lookahead_and_obstacles = speed_scaled_by_lookahead_and_obstacles * speed_obstacle_scale
-        print(" !! OBSTACLE !! 😁😛😋🤣")
+        print(" !! OBSTACLE !! ")
 
     command.speed = speed_scaled_by_lookahead_and_obstacles
 
