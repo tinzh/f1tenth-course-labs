@@ -35,7 +35,7 @@ def construct_path():
     with open(file_path) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter = ',')
         for waypoint in csv_reader:
-            plan.append([waypoint[0], waypoint[1]])
+            plan.append(waypoint)
 
     # Convert string coordinates to floats and calculate path resolution
     for index in range(0, len(plan)):
@@ -173,9 +173,9 @@ def get_purepursuit_target(odom_x, odom_y):
     while curr_distance < lookahead_distance:
         curr_distance += path_resolution[i]
         i = (i+1) % len(path_resolution)
-    target_x, target_y = plan[i]
+    target_x, target_y, _ = plan[i]
 
-    return target_x, target_y, pose_x, pose_y
+    return target_x, target_y, pose_x, pose_y, lookahead_distance
 
 # Main decision-making callback
 def control(data):
@@ -184,7 +184,7 @@ def control(data):
     odom_y = data.pose.position.y
 
     # Use pure pursuit
-    target_x, target_y, pose_x, pose_y = get_purepursuit_target(odom_x, odom_y)
+    target_x, target_y, pose_x, pose_y, lookahead = get_purepursuit_target(odom_x, odom_y)
     purepursuit_desired_angle = math.atan2(target_y - odom_y, target_x - odom_x)
 
     # Confirm with find the gap
@@ -202,8 +202,6 @@ def control(data):
     steering_angle = math.atan(2 * WHEELBASE_LEN * math.sin(alpha) / math.sqrt(dx*dx + dy*dy))
     # steering_angle = math.atan(2 * WHEELBASE_LEN * math.sin(alpha) / params["lookahead_distance"])
     turning_radius = WHEELBASE_LEN / math.tan(alpha)
-
-    print("alpha: {}\tsteering angle: {}".format(math.degrees(alpha), math.degrees(steering_angle)))
 
     ##########################################################################
 
@@ -227,9 +225,11 @@ def control(data):
     #        break
     # command.speed = speed
 
-    if lookahead_distance == max(map(lambda la: la[2], plan)): command.speed = params["speed"]
+    if lookahead == max(map(lambda la: la[2], plan)): command.speed = params["speed"]
     else: command.speed = params["speed"]*params["speed_reduction"]
 
+    print("alpha: {}\tsteering angle: {}\tspeed: {}".format(math.degrees(alpha), math.degrees(steering_angle), command.speed))
+    
     command_pub.publish(command)
 
     ##########################################################################
