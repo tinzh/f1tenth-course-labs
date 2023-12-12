@@ -254,10 +254,10 @@ def control(data):
     else : command.speed = params["speed"]*params["speed_reduction_1"]
 
 
-    avg_lidar_dist_halfway_between_zero_and_steering_angle = sum([(lidar_data.ranges[i] if (not math.isnan(lidar_data.ranges[i]) and not lidar_data.ranges[i] < 0.2) else 2.5) for i in range(angle_to_index(steering_angle/2)-5, angle_to_index(steering_angle/2)+5)])/10
+    avg_lidar_dist_halfway_between_zero_and_steering_angle = sum([(lidar_data.ranges[i] if (not math.isnan(lidar_data.ranges[i]) and not lidar_data.ranges[i] < 0.2) else 2.5) for i in range(angle_to_index(steering_angle*0.7)-5, angle_to_index(steering_angle/2)+5)])/10
     obstacle_data.append((odom_x, odom_y, avg_lidar_dist_halfway_between_zero_and_steering_angle))
 
-    obstacle_threshold = 1.0
+    obstacle_threshold = 0.7
     speed_obstacle_scale = 0.5
 
     if avg_lidar_dist_halfway_between_zero_and_steering_angle < obstacle_threshold:
