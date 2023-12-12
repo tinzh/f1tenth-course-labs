@@ -50,7 +50,6 @@ def construct_path():
          dy = plan[index][1] - plan[index-1][1]
          path_resolution.append(math.sqrt(dx*dx + dy*dy))
 
-
 # Steering Range from -100.0 to 100.0
 STEERING_RANGE = 100.0
 
@@ -70,7 +69,6 @@ def purepursuit_control_node(data):
     odom_x = data.pose.position.x
     odom_y = data.pose.position.y
 
-
     # TODO 1: The reference path is stored in the 'plan' array.
     # Your task is to find the base projection of the car on this reference path.
     # The base projection is defined as the closest point on the reference path to the car's current position.
@@ -85,26 +83,23 @@ def purepursuit_control_node(data):
 
     min_index = -1
     min_square_distance = 10000
-    for i, (x, y, _, _) in enumerate(plan):
+    for i, (x, y, _) in enumerate(plan):
         square_distance = calc_square_distance(x, y, odom_x, odom_y)
         if (square_distance < min_square_distance):
             min_index = i
             min_square_distance = square_distance
 
-    pose_x, pose_y, _, _ = plan[min_index]
+    pose_x, pose_y, lookahead_distance = plan[min_index]
 
-    
     # Calculate heading angle of the car (in radians)
     heading = tf.transformations.euler_from_quaternion((data.pose.orientation.x,
                                                         data.pose.orientation.y,
                                                         data.pose.orientation.z,
                                                         data.pose.orientation.w))[2]
-    
 
     # TODO 2: You need to tune the value of the lookahead_distance
-    lookahead_distance = params["lookahead_distance"]
-    lookahead_square_distance = lookahead_distance * lookahead_distance
-
+    # lookahead_distance = params["lookahead_distance"]
+    # lookahead_square_distance = lookahead_distance * lookahead_distance
 
     # TODO 3: Utilizing the base projection found in TODO 1, your next task is to identify the goal or target point for the car.
     # This target point should be determined based on the path and the base projection you have already calculated.
@@ -118,7 +113,7 @@ def purepursuit_control_node(data):
     while curr_distance < lookahead_distance:
         curr_distance += path_resolution[i]
         i = (i+1) % len(path_resolution)
-    target_x, target_y, _, _ = plan[i]
+    target_x, target_y, _ = plan[i]
 
     # i = min_index
     # while calc_square_distance(plan[i][0], plan[i][1], odom_x, odom_y) < lookahead_square_distance:
@@ -148,7 +143,6 @@ def purepursuit_control_node(data):
     # target_x = x_poss1 if x1 < x_poss1 < x2 or x2 < x_poss1 < x1 else x_poss2
     # target_y = m*target_x + j
 
-
     # TODO 4: Implement the pure pursuit algorithm to compute the steering angle given the pose of the car, target point, and lookahead distance.
     # Your code here
 
@@ -159,9 +153,6 @@ def purepursuit_control_node(data):
     alpha = desired_angle - curr_angle
     steering_angle = math.atan(2 * WHEELBASE_LEN * math.sin(alpha) / lookahead_distance)
     turning_radius = lookahead_distance / (2*math.sin(alpha))
-
-    print("alpha: {}\tsteering angle: {}\tturning radius: {}".format(math.degrees(alpha), math.degrees(steering_angle), turning_radius))
-
 
     # TODO 5: Ensure that the calculated steering angle is within the STEERING_RANGE and assign it to command.steering_angle
     # Your code here    
@@ -177,15 +168,19 @@ def purepursuit_control_node(data):
         command.steering_angle = min(100.0, steering_angle * 100.0 / right_max)
 
     # TODO 6: Implement Dynamic Velocity Scaling instead of a constant speed
-    speed = params["speed"]
-    thresholds = [(80, 1.0/2), (30, 3.0/4)]
-    for threshold, proportion in thresholds:
-       if abs(command.steering_angle) > threshold:
-           speed *= proportion
-           break
-    command.speed = speed
+    # speed = params["speed"]
+    # thresholds = [(80, 1.0/2), (30, 3.0/4)]
+    # for threshold, proportion in thresholds:
+    #    if abs(command.steering_angle) > threshold:
+    #        speed *= proportion
+    #        break
+    # command.speed = speed
 
+    if lookahead_distance == max(map(lambda la: la[2], plan)): command.speed = params["speed"]
+    else: command.speed = params["speed"]*params["speed_reduction"]
 
+    print("alpha: {}\tsteering angle: {}\tturning radius: {}\tspeed: {}".format(math.degrees(alpha), math.degrees(steering_angle), turning_radius, command.speed))
+    
     command_pub.publish(command)
 
     # Visualization code
@@ -209,14 +204,14 @@ def purepursuit_control_node(data):
     wp_seq = wp_seq + 1
     polygon_pub.publish(control_polygon)
 
-
 if __name__ == '__main__':
     try:
         def get_input(name, default_value):
             params[name] = float(raw_input("%s [%f]" % (name, default_value)) or str(default_value))
 
-        get_input("lookahead_distance", 1.5)
+        # get_input("lookahead_distance", 1.5)
         get_input("speed", 45)
+        get_input("speed_reduction", 0.5)
 
         rospy.init_node('pure_pursuit', anonymous = True)
         if not plan:

@@ -35,7 +35,7 @@ def construct_path():
     with open(file_path) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter = ',')
         for waypoint in csv_reader:
-            plan.append(waypoint)
+            plan.append([waypoint[0], waypoint[1]])
 
     # Convert string coordinates to floats and calculate path resolution
     for index in range(0, len(plan)):
@@ -160,12 +160,12 @@ def get_purepursuit_target(odom_x, odom_y):
 	# Find reference point on plan
     min_index = -1
     min_square_distance = 10000
-    for i, (x, y, _, _) in enumerate(plan):
+    for i, (x, y) in enumerate(plan):
         square_distance = calc_square_distance(x, y, odom_x, odom_y)
         if (square_distance < min_square_distance):
             min_index = i
             min_square_distance = square_distance
-    pose_x, pose_y, _, _ = plan[min_index]
+    pose_x, pose_y = plan[min_index]
 
 	# Get target point ahead on path
     i = min_index % len(path_resolution)
@@ -173,7 +173,7 @@ def get_purepursuit_target(odom_x, odom_y):
     while curr_distance < params["lookahead_distance"]:
         curr_distance += path_resolution[i]
         i = (i+1) % len(path_resolution)
-    target_x, target_y, _, _ = plan[i]
+    target_x, target_y = plan[i]
 
     return target_x, target_y, pose_x, pose_y
 
