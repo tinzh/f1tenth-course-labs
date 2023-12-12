@@ -50,9 +50,6 @@ def construct_path():
          dy = plan[index][1] - plan[index-1][1]
          path_resolution.append(math.sqrt(dx*dx + dy*dy))
 
-    la_thres = (min(map(lambda la: la[2], plan))+max(map(lambda la: la[2], plan)))/2
-
-
 # Steering Range from -100.0 to 100.0
 STEERING_RANGE = 100.0
 
@@ -71,7 +68,6 @@ def purepursuit_control_node(data):
     # Obtain the current position of the race car from the inferred_pose message
     odom_x = data.pose.position.x
     odom_y = data.pose.position.y
-
 
     # TODO 1: The reference path is stored in the 'plan' array.
     # Your task is to find the base projection of the car on this reference path.
@@ -100,7 +96,6 @@ def purepursuit_control_node(data):
                                                         data.pose.orientation.y,
                                                         data.pose.orientation.z,
                                                         data.pose.orientation.w))[2]
-    
 
     # TODO 2: You need to tune the value of the lookahead_distance
     # lookahead_distance = params["lookahead_distance"]
@@ -148,7 +143,6 @@ def purepursuit_control_node(data):
     # target_x = x_poss1 if x1 < x_poss1 < x2 or x2 < x_poss1 < x1 else x_poss2
     # target_y = m*target_x + j
 
-
     # TODO 4: Implement the pure pursuit algorithm to compute the steering angle given the pose of the car, target point, and lookahead distance.
     # Your code here
 
@@ -182,7 +176,7 @@ def purepursuit_control_node(data):
     #        break
     # command.speed = speed
 
-    if lookahead_distance > la_thres: command.speed = params["speed"]
+    if lookahead_distance == max(map(lambda la: la[2], plan)): command.speed = params["speed"]
     else: command.speed = params["speed"]*params["speed_reduction"]
 
     print("alpha: {}\tsteering angle: {}\tturning radius: {}\tspeed: {}".format(math.degrees(alpha), math.degrees(steering_angle), turning_radius, command.speed))
