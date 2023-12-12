@@ -137,7 +137,7 @@ def save_raceline(x, y, path):
     plot_y_scaled = y*resolution + origin_y
     slow_lookahead = 0.75
     fast_lookahead = 1.5
-    lookahead = [(slow_lookahead if i < len(plot_x_scaled)/2 else fast_lookahead) for i in range(len(plot_x_scaled))]
+    lookahead = [(slow_lookahead if i < len(plot_x_scaled)/2 or i > len(plot_x_scaled) - 30 else fast_lookahead) for i in range(len(plot_x_scaled))]
     export_data = pd.DataFrame({'plot_x': plot_x_scaled, 'plot_y': plot_y_scaled, 'lookahead': lookahead})
     export_csv_path = path
     export_data.to_csv(export_csv_path, index=False, header=None)
@@ -355,7 +355,7 @@ def draw_polygon(x, y):
     return plot_x, plot_y
 
 load_map("coles_map_2.yaml")
-x, y = load_raceline("justins_rough.csv")
+x, y = load_raceline(input("enter starting raceline (include.csv): "))
 # x, y = downsample(x, y, 10)
 x, y = draw_polygon(x, y)
-save_raceline(x, y, input("Enter output filename: "))
+save_raceline(x, y, input("Enter output filename (include csv): "))
