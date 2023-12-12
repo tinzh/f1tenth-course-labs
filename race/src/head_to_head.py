@@ -276,8 +276,8 @@ if __name__ == '__main__':
     # get_input("disparity_threshold", 0.1)
     # get_input("car_width", 0.5)
 
-    get_input("speed", 45)
-    get_input("speed_reduction", 0.5)
+    get_input("speed", 60)
+    get_input("speed_reduction", 0.46)
 
     rospy.init_node('pure_pursuit', anonymous = True)
 
