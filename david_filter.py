@@ -13,6 +13,8 @@ from matplotlib.artist import Artist
 from matplotlib.patches import Polygon
 from matplotlib import colormaps
 
+global old_poly_x, old_poly_y
+
 # helper function
 def point_to_line_dist(point, line):
     """Calculate the distance between a point and a line segment.
@@ -140,10 +142,16 @@ def save_raceline(x, y, path):
     #30->80
 
 
-    lookahead = [(fast_lookahead if i > len(plot_x_scaled)*0.35 and i < len(plot_x_scaled)*0.8 else slow_lookahead) for i in range(len(plot_x_scaled))]
+    lookahead = [(fast_lookahead if i > len(plot_x_scaled)*0.3 and i < len(plot_x_scaled)*0.8 else slow_lookahead) for i in range(len(plot_x_scaled))]
     export_data = pd.DataFrame({'plot_x': plot_x_scaled, 'plot_y': plot_y_scaled, 'lookahead': lookahead})
     export_csv_path = path
     export_data.to_csv(export_csv_path, index=False, header=None)
+
+    global old_poly_x, old_poly_y
+    # self.poly.xy = np.column_stack([self.x, self.y])
+    print(old_poly_x)
+    export_data = pd.DataFrame({'plot_x': [i*resolution + origin_x for i in  old_poly_x], 'plot_y': [i*resolution + origin_y for i in  old_poly_y]})
+    export_data.to_csv("raw_" + export_csv_path, index=False, header=None)
 
 class PolygonInteractor(object):
     """
@@ -278,10 +286,14 @@ class PolygonInteractor(object):
                     break
         elif event.key == 'x':
             print("here")
+            global old_poly_x, old_poly_y
+
             if self.smooth:
                 print("reverting")
                 # need to revert back to unsmooth
                 self.poly.xy = np.column_stack([self.x, self.y])
+                old_poly_x = self.x
+                old_poly_y = self.y
                 global plot_x, plot_y
                 plot_x, plot_y = self.x, self.y
                 self.smooth = False
@@ -290,6 +302,8 @@ class PolygonInteractor(object):
                 print("smoothing")
                 self.x = self.poly.xy[:,0]
                 self.y = self.poly.xy[:,1]
+                old_poly_x = self.x
+                old_poly_y = self.y
                 
                 x_smooth, y_smooth = smooth_raceline(self.x, self.y)
                 self.poly.xy = np.column_stack([x_smooth, y_smooth])
