@@ -142,7 +142,7 @@ def save_raceline(x, y, path):
     #30->80
 
 
-    lookahead = [(fast_lookahead if i > len(plot_x_scaled)*0.3 and i < len(plot_x_scaled)*0.8 else slow_lookahead) for i in range(len(plot_x_scaled))]
+    lookahead = [(slow_lookahead if i > len(plot_x_scaled)*0.3 and i < len(plot_x_scaled)*0.9 else fast_lookahead) for i in range(len(plot_x_scaled))]
     export_data = pd.DataFrame({'plot_x': plot_x_scaled, 'plot_y': plot_y_scaled, 'lookahead': lookahead})
     export_csv_path = path
     export_data.to_csv(export_csv_path, index=False, header=None)

@@ -14,6 +14,8 @@ from matplotlib.patches import Polygon
 from matplotlib import colormaps
 from matplotlib.widgets import TextBox
 
+global old_poly_x, old_poly_y
+
 # helper function
 def point_to_line_dist(point, line):
     """Calculate the distance between a point and a line segment.
@@ -148,6 +150,12 @@ def save_raceline(x, y, lookaheads, path):
     export_csv_path = path
     export_data.to_csv(export_csv_path, index=False, header=None)
 
+    global old_poly_x, old_poly_y
+    # self.poly.xy = np.column_stack([self.x, self.y])
+    print(old_poly_x)
+    new_export_data = pd.DataFrame({'plot_x': [i*resolution + origin_x for i in  old_poly_x], 'plot_y': [i*resolution + origin_y for i in  old_poly_y]})
+    new_export_data.to_csv("raw_" + export_csv_path, index=False, header=None)
+
 class PolygonInteractor(object):
     """
     A polygon editor.
@@ -280,14 +288,19 @@ class PolygonInteractor(object):
                     self.y = np.insert(self.y, i+1, event.ydata)
                     break
         elif event.key == 'x':
+            global old_poly_x, old_poly_y
             if self.smooth:
                 print("reverting")
                 # need to revert back to unsmooth
+                old_poly_x = self.x
+                old_poly_y = self.y
                 self.x, self.y = self.original_x, self.original_y
                 self.smooth = False
             else:
                 # need to smooth out 
                 print("smoothing")
+                old_poly_x = self.x
+                old_poly_y = self.y
                 self.original_x, self.original_y = self.x, self.y
                 self.x, self.y = smooth_raceline(self.x, self.y, self.num_smooth_points)
                 # self.scatter.set_array(self.lookaheads)
@@ -369,7 +382,9 @@ def draw_polygon(x, y, lookaheads):
     return plot_x, plot_y, plot_l
 
 load_map("coles_map_2.yaml")
-x, y, lookaheads = load_raceline("justins_rough.csv")
+# x, y, lookaheads = load_raceline("justins_rough.csv")
+x, y, lookaheads = load_raceline(input("enter starting raceline (include.csv): "))
+
 # x, y = downsample(x, y, 10)
 x, y, lookaheads = draw_polygon(x, y, lookaheads)
 
