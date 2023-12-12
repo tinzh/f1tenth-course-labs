@@ -1,8 +1,9 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import sys
 
 # Load the CSV file
-file_path = input("name in folder: ")  # Replace with your file path
+file_path = sys.argv[0]  # Replace with your file path
 data = pd.read_csv(file_path, header=None)
 data.columns = ['Column1', 'Column2', 'Column3']
 
