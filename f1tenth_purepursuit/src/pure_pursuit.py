@@ -50,6 +50,8 @@ def construct_path():
          dy = plan[index][1] - plan[index-1][1]
          path_resolution.append(math.sqrt(dx*dx + dy*dy))
 
+    la_thres = (min(map(lambda la: la[2], plan))+max(map(lambda la: la[2], plan)))/2
+
 
 # Steering Range from -100.0 to 100.0
 STEERING_RANGE = 100.0
@@ -93,7 +95,6 @@ def purepursuit_control_node(data):
 
     pose_x, pose_y, lookahead_distance = plan[min_index]
 
-    
     # Calculate heading angle of the car (in radians)
     heading = tf.transformations.euler_from_quaternion((data.pose.orientation.x,
                                                         data.pose.orientation.y,
@@ -159,9 +160,6 @@ def purepursuit_control_node(data):
     steering_angle = math.atan(2 * WHEELBASE_LEN * math.sin(alpha) / lookahead_distance)
     turning_radius = lookahead_distance / (2*math.sin(alpha))
 
-    print("alpha: {}\tsteering angle: {}\tturning radius: {}".format(math.degrees(alpha), math.degrees(steering_angle), turning_radius))
-
-
     # TODO 5: Ensure that the calculated steering angle is within the STEERING_RANGE and assign it to command.steering_angle
     # Your code here    
     # TODO: fix alignment
@@ -184,9 +182,11 @@ def purepursuit_control_node(data):
     #        break
     # command.speed = speed
 
-    if lookahead_distance > 1: command.speed = params["speed"]
+    if lookahead_distance > la_thres: command.speed = params["speed"]
     else: command.speed = params["speed"]*params["speed_reduction"]
 
+    print("alpha: {}\tsteering angle: {}\tturning radius: {}\tspeed: {}".format(math.degrees(alpha), math.degrees(steering_angle), turning_radius, command.speed))
+    
     command_pub.publish(command)
 
     # Visualization code
@@ -209,7 +209,6 @@ def purepursuit_control_node(data):
     control_polygon.header.stamp    = rospy.Time.now()
     wp_seq = wp_seq + 1
     polygon_pub.publish(control_polygon)
-
 
 if __name__ == '__main__':
     try:
