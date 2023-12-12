@@ -12,6 +12,7 @@ from sensor_msgs.msg import LaserScan
 from std_msgs.msg import Header
 import tf
 import atexit
+import datetime
 
 # Global variables
 params              = {}
@@ -58,7 +59,7 @@ def record_lidar(data):
 def save_plan():
     # Function to save the planned path into a CSV file
     # Modify the file path below to match the path on the racecar
-    file_path = os.path.expanduser('/home/nvidia/depend_ws/src/F1tenth_car_workspace/f1tenth-course-labs/{}.csv'.format("obstacle_data"))
+    file_path = os.path.expanduser('/home/nvidia/depend_ws/src/F1tenth_car_workspace/f1tenth-course-labs/{}.csv'.format("obstacle_data_" + datetime.datetime.now()))
     with open(file_path, mode = 'w') as csv_file:
         csv_writer = csv.writer(csv_file, delimiter = ',', quoting = csv.QUOTE_NONNUMERIC)
         for index in range(0, len(obstacle_data)):
