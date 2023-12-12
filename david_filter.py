@@ -150,8 +150,8 @@ def save_raceline(x, y, path):
     global old_poly_x, old_poly_y
     # self.poly.xy = np.column_stack([self.x, self.y])
     print(old_poly_x)
-    export_data = pd.DataFrame({'plot_x': [i*resolution + origin_x for i in  old_poly_x], 'plot_y': [i*resolution + origin_y for i in  old_poly_y]})
-    export_data.to_csv("raw_" + export_csv_path, index=False, header=None)
+    new_export_data = pd.DataFrame({'plot_x': [i*resolution + origin_x for i in  old_poly_x], 'plot_y': [i*resolution + origin_y for i in  old_poly_y]})
+    new_export_data.to_csv("raw_" + export_csv_path, index=False, header=None)
 
 class PolygonInteractor(object):
     """
