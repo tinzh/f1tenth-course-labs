@@ -61,7 +61,7 @@ def save_plan():
     file_path = os.path.expanduser('/home/nvidia/depend_ws/src/F1tenth_car_workspace/f1tenth-course-labs/{}.csv'.format("obstacle_data"))
     with open(file_path, mode = 'w') as csv_file:
         csv_writer = csv.writer(csv_file, delimiter = ',', quoting = csv.QUOTE_NONNUMERIC)
-        for index in range(0, len(plan)):
+        for index in range(0, len(obstacle_data)):
             csv_writer.writerow([obstacle_data[index][0],
                                  obstacle_data[index][1],
                                  obstacle_data[index][2]])
