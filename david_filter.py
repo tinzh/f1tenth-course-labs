@@ -128,16 +128,19 @@ def smooth_raceline(x, y, num_points=300):
 # return x,y from csv
 def load_raceline(path):
     data = pd.read_csv(path)
-    return (data.iloc[:,0] - origin_x) / resolution, (data.iloc[:,1] - origin_y) / resolution;
+    return (data.iloc[:,0] - origin_x) / resolution, (data.iloc[:,1] - origin_y) / resolution
 
 # saves x,y to csv
 def save_raceline(x, y, path):
     # Exporting the DataFrame to a CSV file
-    plot_x_scaled = x*resolution + origin_x
-    plot_y_scaled = y*resolution + origin_y
-    slow_lookahead = 0.75
+    plot_x_scaled = [i * resolution + origin_x for i in x]
+    plot_y_scaled = [i * resolution + origin_y for i in y]
+    slow_lookahead = 1
     fast_lookahead = 1.5
-    lookahead = [(slow_lookahead if i < len(plot_x_scaled)/2 or i > len(plot_x_scaled) - 30 else fast_lookahead) for i in range(len(plot_x_scaled))]
+    #30->80
+
+
+    lookahead = [(fast_lookahead if i > len(plot_x_scaled)*0.35 and i < len(plot_x_scaled)*0.8 else slow_lookahead) for i in range(len(plot_x_scaled))]
     export_data = pd.DataFrame({'plot_x': plot_x_scaled, 'plot_y': plot_y_scaled, 'lookahead': lookahead})
     export_csv_path = path
     export_data.to_csv(export_csv_path, index=False, header=None)
