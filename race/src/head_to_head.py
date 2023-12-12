@@ -35,7 +35,7 @@ def construct_path():
     with open(file_path) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter = ',')
         for waypoint in csv_reader:
-            plan.append([waypoint[0], waypoint[1]])
+            plan.append(waypoint)
 
     # Convert string coordinates to floats and calculate path resolution
     for index in range(0, len(plan)):
@@ -160,22 +160,22 @@ def get_purepursuit_target(odom_x, odom_y):
 	# Find reference point on plan
     min_index = -1
     min_square_distance = 10000
-    for i, (x, y) in enumerate(plan):
+    for i, (x, y, _) in enumerate(plan):
         square_distance = calc_square_distance(x, y, odom_x, odom_y)
         if (square_distance < min_square_distance):
             min_index = i
             min_square_distance = square_distance
-    pose_x, pose_y = plan[min_index]
+    pose_x, pose_y, lookahead_distance = plan[min_index]
 
 	# Get target point ahead on path
     i = min_index % len(path_resolution)
     curr_distance = 0
-    while curr_distance < params["lookahead_distance"]:
+    while curr_distance < lookahead_distance:
         curr_distance += path_resolution[i]
         i = (i+1) % len(path_resolution)
-    target_x, target_y = plan[i]
+    target_x, target_y, _ = plan[i]
 
-    return target_x, target_y, pose_x, pose_y
+    return target_x, target_y, pose_x, pose_y, lookahead_distance
 
 # Main decision-making callback
 def control(data):
@@ -184,7 +184,7 @@ def control(data):
     odom_y = data.pose.position.y
 
     # Use pure pursuit
-    target_x, target_y, pose_x, pose_y = get_purepursuit_target(odom_x, odom_y)
+    target_x, target_y, pose_x, pose_y, lookahead = get_purepursuit_target(odom_x, odom_y)
     purepursuit_desired_angle = math.atan2(target_y - odom_y, target_x - odom_x)
 
     # Confirm with find the gap
@@ -203,8 +203,6 @@ def control(data):
     # steering_angle = math.atan(2 * WHEELBASE_LEN * math.sin(alpha) / params["lookahead_distance"])
     turning_radius = WHEELBASE_LEN / math.tan(alpha)
 
-    print("alpha: {}\tsteering angle: {}".format(math.degrees(alpha), math.degrees(steering_angle)))
-
     ##########################################################################
 
     # Construct AckermannDrive message
@@ -219,14 +217,19 @@ def control(data):
         command.steering_angle = min(100.0, steering_angle * 100.0 / right_max)
 
 	# Publish speed (with velocity scaling)
-    speed = params["speed"]
-    thresholds = [(80, 1.0/2), (30, 3.0/4)]
-    for threshold, proportion in thresholds:
-       if abs(command.steering_angle) > threshold:
-           speed *= proportion
-           break
-    command.speed = speed
+    # speed = params["speed"]
+    # thresholds = [(80, 1.0/2), (30, 3.0/4)]
+    # for threshold, proportion in thresholds:
+    #    if abs(command.steering_angle) > threshold:
+    #        speed *= proportion
+    #        break
+    # command.speed = speed
 
+    if lookahead == max(map(lambda la: la[2], plan)): command.speed = params["speed"]
+    else: command.speed = params["speed"]*params["speed_reduction"]
+
+    print("alpha: {}\tsteering angle: {}\tspeed: {}".format(math.degrees(alpha), math.degrees(steering_angle), command.speed))
+    
     command_pub.publish(command)
 
     ##########################################################################
@@ -248,11 +251,13 @@ if __name__ == '__main__':
     def get_input(name, default_value):
         params[name] = float(raw_input("%s [%f]" % (name, default_value)) or str(default_value))
 
-    get_input("speed", 45)
-    get_input("lookahead_distance", 1.5)
-    get_input("disparity_threshold", 0.1)
-    get_input("car_width", 0.5)
+    # get_input("speed", 45)
+    # get_input("lookahead_distance", 1.5)
+    # get_input("disparity_threshold", 0.1)
+    # get_input("car_width", 0.5)
 
+    get_input("speed", 45)
+    get_input("speed_reduction", 0.5)
 
     rospy.init_node('pure_pursuit', anonymous = True)
 
