@@ -102,9 +102,10 @@ def purepursuit_control_node(data):
     
 
     # TODO 2: You need to tune the value of the lookahead_distance
-    lookahead_distance = params["lookahead_distance"]
-    lookahead_square_distance = lookahead_distance * lookahead_distance
+    # lookahead_distance = params["lookahead_distance"]
+    # lookahead_square_distance = lookahead_distance * lookahead_distance
 
+    lookahead_distance = plan[min_index][2]
 
     # TODO 3: Utilizing the base projection found in TODO 1, your next task is to identify the goal or target point for the car.
     # This target point should be determined based on the path and the base projection you have already calculated.
@@ -177,14 +178,16 @@ def purepursuit_control_node(data):
         command.steering_angle = min(100.0, steering_angle * 100.0 / right_max)
 
     # TODO 6: Implement Dynamic Velocity Scaling instead of a constant speed
-    speed = params["speed"]
-    thresholds = [(80, 1.0/2), (30, 3.0/4)]
-    for threshold, proportion in thresholds:
-       if abs(command.steering_angle) > threshold:
-           speed *= proportion
-           break
-    command.speed = speed
+    # speed = params["speed"]
+    # thresholds = [(80, 1.0/2), (30, 3.0/4)]
+    # for threshold, proportion in thresholds:
+    #    if abs(command.steering_angle) > threshold:
+    #        speed *= proportion
+    #        break
+    # command.speed = speed
 
+    if lookahead_distance > 1: command.speed = params["speed"]
+    else: command.speed = params["speed"]*params["speed_reduction"]
 
     command_pub.publish(command)
 
@@ -215,8 +218,9 @@ if __name__ == '__main__':
         def get_input(name, default_value):
             params[name] = float(raw_input("%s [%f]" % (name, default_value)) or str(default_value))
 
-        get_input("lookahead_distance", 1.5)
+        # get_input("lookahead_distance", 1.5)
         get_input("speed", 45)
+        get_input("speed_reduction", 0.5)
 
         rospy.init_node('pure_pursuit', anonymous = True)
         if not plan:
