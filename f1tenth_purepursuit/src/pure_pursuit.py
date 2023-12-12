@@ -85,13 +85,13 @@ def purepursuit_control_node(data):
 
     min_index = -1
     min_square_distance = 10000
-    for i, (x, y, _, _) in enumerate(plan):
+    for i, (x, y, _) in enumerate(plan):
         square_distance = calc_square_distance(x, y, odom_x, odom_y)
         if (square_distance < min_square_distance):
             min_index = i
             min_square_distance = square_distance
 
-    pose_x, pose_y, _, _ = plan[min_index]
+    pose_x, pose_y, lookahead_distance = plan[min_index]
 
     
     # Calculate heading angle of the car (in radians)
@@ -105,8 +105,6 @@ def purepursuit_control_node(data):
     # lookahead_distance = params["lookahead_distance"]
     # lookahead_square_distance = lookahead_distance * lookahead_distance
 
-    lookahead_distance = plan[min_index][2]
-
     # TODO 3: Utilizing the base projection found in TODO 1, your next task is to identify the goal or target point for the car.
     # This target point should be determined based on the path and the base projection you have already calculated.
     # The target point is a specific point on the reference path that the car should aim towards - lookahead distance ahead of the base projection on the reference path.
@@ -119,7 +117,7 @@ def purepursuit_control_node(data):
     while curr_distance < lookahead_distance:
         curr_distance += path_resolution[i]
         i = (i+1) % len(path_resolution)
-    target_x, target_y, _, _ = plan[i]
+    target_x, target_y, _ = plan[i]
 
     # i = min_index
     # while calc_square_distance(plan[i][0], plan[i][1], odom_x, odom_y) < lookahead_square_distance:
