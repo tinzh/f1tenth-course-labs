@@ -260,6 +260,7 @@ def control(data):
     obstacle_threshold = 0.7
     speed_obstacle_scale = 0.5
 
+    new_speed = command.speed
     if avg_lidar_dist_halfway_between_zero_and_steering_angle < obstacle_threshold:
         new_speed *= speed_obstacle_scale
         print(" !! OBSTACLE !! {}".format(command.speed))
