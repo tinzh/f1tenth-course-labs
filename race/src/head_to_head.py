@@ -30,7 +30,7 @@ polygon_pub         = rospy.Publisher('/{}/purepursuit_control/visualize'.format
 STEERING_RANGE = 100.0
 WHEELBASE_LEN       = 0.325
 
-# obstacle_data = []
+obstacle_data = []
 
 def construct_path():
     # Function to construct the path from a CSV file
@@ -56,18 +56,18 @@ def record_lidar(data):
     global lidar_data
     lidar_data = data
 
-# def save_plan():
-#     # Function to save the planned path into a CSV file
-#     # Modify the file path below to match the path on the racecar
-#     file_path = os.path.expanduser('/home/nvidia/depend_ws/src/F1tenth_car_workspace/f1tenth-course-labs/{}.csv'.format("obstacle_data_" + str(datetime.datetime.now())))
-#     with open(file_path, mode = 'w') as csv_file:
-#         csv_writer = csv.writer(csv_file, delimiter = ',', quoting = csv.QUOTE_NONNUMERIC)
-#         for index in range(0, len(obstacle_data)):
-#             csv_writer.writerow([obstacle_data[index][0],
-#                                  obstacle_data[index][1],
-#                                  obstacle_data[index][2]])
+def save_plan():
+    # Function to save the planned path into a CSV file
+    # Modify the file path below to match the path on the racecar
+    file_path = os.path.expanduser('/home/nvidia/depend_ws/src/F1tenth_car_workspace/f1tenth-course-labs/{}.csv'.format("obstacle_data_" + str(datetime.datetime.now())))
+    with open(file_path, mode = 'w') as csv_file:
+        csv_writer = csv.writer(csv_file, delimiter = ',', quoting = csv.QUOTE_NONNUMERIC)
+        for index in range(0, len(obstacle_data)):
+            csv_writer.writerow([obstacle_data[index][0],
+                                 obstacle_data[index][1],
+                                 obstacle_data[index][2]])
 
-# atexit.register(save_plan)
+atexit.register(save_plan)
 
 def index_to_angle(index):
     return lidar_data.angle_min + lidar_data.angle_increment * index
@@ -233,6 +233,8 @@ def control(data):
     else: 
         command.steering_angle = min(100.0, steering_angle * 100.0 / right_max)
 
+    lidar_dist_halfway_between_zero_and_steering_angle = sum([(lidar_data.ranges[i] if (not math.isnan(lidar_data.ranges[i]) and not lidar_data.ranges[i] < 0.2) else 2.5) for i in range(angle_to_index(steering_angle/2)-5, angle_to_index(steering_angle/2)+5)])/10
+    obstacle_data.append((odom_x, odom_y, lidar_dist_halfway_between_zero_and_steering_angle))
     
 
 	# Publish speed (with velocity scaling)
@@ -243,8 +245,6 @@ def control(data):
     #        speed *= proportion
     #        break
     # command.speed = speed
-    
-    # speed_scaled_by_lookahead_and_obstacles = 0
 
     max_lookahead = max(map(lambda la: la[2], plan))
     min_lookahead = min(map(lambda la: la[2], plan))
@@ -253,21 +253,9 @@ def control(data):
     elif lookahead == min_lookahead: command.speed = params["speed"]*params["speed_reduction_2"]
     else : command.speed = params["speed"]*params["speed_reduction_1"]
 
+    print("alpha: {}\tsteering angle: {}\tspeed: {}".format(math.degrees(alpha), math.degrees(steering_angle), command.speed))
+    
     command_pub.publish(command)
-
-    # avg_lidar_dist_halfway_between_zero_and_steering_angle = sum([(lidar_data.ranges[i] if (not math.isnan(lidar_data.ranges[i]) and not lidar_data.ranges[i] < 0.2) else 2.5) for i in range(angle_to_index(steering_angle*0.5)-5, angle_to_index(steering_angle/2)+5)])/10
-    # # obstacle_data.append((odom_x, odom_y, avg_lidar_dist_halfway_between_zero_and_steering_angle))
-
-    # obstacle_threshold = 0.7
-    # speed_obstacle_scale = 0.5
-
-    # new_speed = command.speed
-    # if avg_lidar_dist_halfway_between_zero_and_steering_angle < obstacle_threshold:
-    #     new_speed *= speed_obstacle_scale
-    #     print(" !! OBSTACLE !! {}".format(command.speed))
-
-    # print("alpha: {}\tsteering angle: {}\tspeed: {}".format(math.degrees(alpha), math.degrees(steering_angle), command.speed))
-    # command.speed = speed_scaled_by_lookahead_and_obstacles
 
     ##########################################################################
 
