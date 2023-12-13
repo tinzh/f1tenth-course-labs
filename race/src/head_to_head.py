@@ -249,8 +249,9 @@ def control(data):
     max_lookahead = max(map(lambda la: la[2], plan))
     min_lookahead = min(map(lambda la: la[2], plan))
 
-    if lookahead == max_lookahead: command.speed = params["speed"]
-    elif lookahead == min_lookahead: command.speed = params["speed"]*params["speed_reduction_2"]
+    if lookahead == 1.8: command.speed = params["speed"]
+    elif lookahead == 1.5: command.speed = params["speed"]*params["speed_reduction_3"]
+    elif lookahead == 1.2: command.speed = params["speed"]*params["speed_reduction_2"]
     else : command.speed = params["speed"]*params["speed_reduction_1"]
 
     print("alpha: {}\tsteering angle: {}\tspeed: {}".format(math.degrees(alpha), math.degrees(steering_angle), command.speed))
@@ -282,8 +283,9 @@ if __name__ == '__main__':
     # get_input("car_width", 0.5)
 
     get_input("speed", 60)
-    get_input("speed_reduction_1", 0.625)
-    get_input("speed_reduction_2", 0.5)
+    get_input("speed_reduction_1", 0.5)
+    get_input("speed_reduction_2", 0.625)
+    get_input("speed_reduction_3", 0.67)
 
     rospy.init_node('pure_pursuit', anonymous = True)
 
