@@ -282,7 +282,7 @@ if __name__ == '__main__':
     # get_input("car_width", 0.5)
 
     get_input("speed", 60)
-    get_input("speed_reduction_1", 0.6)
+    get_input("speed_reduction_1", 0.625)
     get_input("speed_reduction_2", 0.5)
 
     rospy.init_node('pure_pursuit', anonymous = True)
